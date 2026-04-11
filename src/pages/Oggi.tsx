@@ -17,7 +17,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { mockMedications, mockSchedules, mockAppointments } from '@/lib/mockData';
 import { Medication, Schedule, Appointment } from '@/types';
-import { logMedication } from '@/lib/googleSheets';
+import { logMedication, fetchDatabase } from '@/lib/googleSheets';
 
 type TaskType = 'MEDICATION' | 'APPOINTMENT' | 'MEASUREMENT';
 
@@ -34,42 +34,89 @@ interface Task {
 }
 
 export default function Oggi() {
-  const [tasks, setTasks] = useState<Task[]>(() => {
-    const today = new Date();
-    const dayTasks: Task[] = [];
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [loading, setLoading] = useState(true);
 
-    // Add Medications from schedules
-    mockSchedules.forEach(schedule => {
-      const med = mockMedications.find(m => m.id === schedule.medicationId);
-      if (med) {
-        dayTasks.push({
-          id: `task-${schedule.id}`,
-          type: 'MEDICATION',
-          time: schedule.time,
-          title: med.name,
-          subtitle: med.dosage,
-          status: 'PENDING',
-          medication: med
+  React.useEffect(() => {
+    const loadData = async () => {
+      const db = await fetchDatabase();
+      const today = new Date();
+      const dayTasks: Task[] = [];
+
+      if (db && db.medicinals && db.medicinals.length > 0) {
+        db.medicinals.forEach(med => {
+          if (med.orario_1) {
+            dayTasks.push({
+              id: `task-${med.id}-1`,
+              type: 'MEDICATION',
+              time: med.orario_1,
+              title: med.nome,
+              subtitle: med.dosaggio,
+              status: 'PENDING',
+              medication: {
+                id: med.id,
+                name: med.nome,
+                dosage: med.dosaggio,
+                form: med.forma as any,
+                currentStock: med.stock_attuale,
+                refillThreshold: med.soglia_rifornimento
+              }
+            });
+          }
+          if (med.orario_2) {
+            dayTasks.push({
+              id: `task-${med.id}-2`,
+              type: 'MEDICATION',
+              time: med.orario_2,
+              title: med.nome,
+              subtitle: med.dosaggio,
+              status: 'PENDING',
+              medication: {
+                id: med.id,
+                name: med.nome,
+                dosage: med.dosaggio,
+                form: med.forma as any,
+                currentStock: med.stock_attuale,
+                refillThreshold: med.soglia_rifornimento
+              }
+            });
+          }
+        });
+      } else {
+        mockSchedules.forEach(schedule => {
+          const med = mockMedications.find(m => m.id === schedule.medicationId);
+          if (med) {
+            dayTasks.push({
+              id: `task-${schedule.id}`,
+              type: 'MEDICATION',
+              time: schedule.time,
+              title: med.name,
+              subtitle: med.dosage,
+              status: 'PENDING',
+              medication: med
+            });
+          }
         });
       }
-    });
 
-    // Add Appointments
-    mockAppointments.forEach(app => {
-      if (isSameDay(parseISO(app.dateTime), today)) {
-        dayTasks.push({
-          id: `app-${app.id}`,
-          type: 'APPOINTMENT',
-          time: format(parseISO(app.dateTime), 'HH:mm'),
-          title: app.title,
-          subtitle: app.doctorName,
-          appointment: app
-        });
-      }
-    });
+      mockAppointments.forEach(app => {
+        if (isSameDay(parseISO(app.dateTime), today)) {
+          dayTasks.push({
+            id: `app-${app.id}`,
+            type: 'APPOINTMENT',
+            time: format(parseISO(app.dateTime), 'HH:mm'),
+            title: app.title,
+            subtitle: app.doctorName,
+            appointment: app
+          });
+        }
+      });
 
-    return dayTasks.sort((a, b) => a.time.localeCompare(b.time));
-  });
+      setTasks(dayTasks.sort((a, b) => a.time.localeCompare(b.time)));
+      setLoading(false);
+    };
+    loadData();
+  }, []);
 
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [note, setNote] = useState('');
@@ -161,6 +208,17 @@ export default function Oggi() {
   };
 
   const todayStr = format(new Date(), "EEEE d MMMM", { locale: it });
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <div className="flex flex-col items-center space-y-4">
+          <Activity className="h-8 w-8 text-blue-600 animate-pulse" />
+          <p className="text-slate-500 font-medium">Caricamento programma...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-md mx-auto pb-8">

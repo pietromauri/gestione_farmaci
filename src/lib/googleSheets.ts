@@ -3,14 +3,28 @@
 
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxodh2BvY4QSlRtRRuKEw8y3nTSKi8v_WLuh-IcCyGDbt5kYhg1Xr30DaDS1jSQ8rfVTQ/exec'; 
 
-export interface MedicationLog {
-  name: string;
-  dosage: string;
-  time: string;
-  status: 'taken' | 'missed' | 'pending';
-  date: string;
-  userEmail?: string;
+export interface MedicationData {
+  id: string;
+  nome: string;
+  dosaggio: string;
+  forma: string;
+  stock_attuale: number;
+  soglia_rifornimento: number;
+  orario_1?: string;
+  orario_2?: string;
 }
+
+export const fetchDatabase = async () => {
+  if (SCRIPT_URL.includes('XXXXXXXXX')) return null;
+  try {
+    const response = await fetch(SCRIPT_URL);
+    const data = await response.json();
+    return data as { medicinals: MedicationData[], logs: any[] };
+  } catch (error) {
+    console.error("Errore nel recupero del database:", error);
+    return null;
+  }
+};
 
 export const logMedication = async (log: MedicationLog) => {
   if (SCRIPT_URL.includes('XXXXXXXXX')) {
