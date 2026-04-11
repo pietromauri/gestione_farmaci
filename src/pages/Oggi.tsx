@@ -17,6 +17,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { mockMedications, mockSchedules, mockAppointments } from '@/lib/mockData';
 import { Medication, Schedule, Appointment } from '@/types';
+import { logMedication } from '@/lib/googleSheets';
 
 type TaskType = 'MEDICATION' | 'APPOINTMENT' | 'MEASUREMENT';
 
@@ -99,6 +100,17 @@ export default function Oggi() {
 
   const confirmAction = () => {
     if (selectedTask && pendingAction) {
+      // Invia il log a Google Sheets in background
+      if (selectedTask.type === 'MEDICATION') {
+        logMedication({
+          name: selectedTask.title,
+          dosage: selectedTask.subtitle || '',
+          time: selectedTask.time,
+          status: pendingAction === 'TAKEN' ? 'taken' : 'missed',
+          date: format(new Date(), 'yyyy-MM-dd')
+        });
+      }
+
       setTasks(prev => prev.map(t => 
         t.id === selectedTask.id ? { ...t, status: pendingAction } : t
       ));
