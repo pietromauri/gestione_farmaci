@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { MedicationForm } from '@/types';
+import { addMedication } from '@/lib/googleSheets';
 
 interface AddDataMenuProps {
   isOpen: boolean;
@@ -26,6 +27,34 @@ interface AddDataMenuProps {
 
 export default function AddDataMenu({ isOpen, onClose }: AddDataMenuProps) {
   const [activeModal, setActiveModal] = useState<'NONE' | 'MED' | 'SYMPTOM' | 'MOOD' | 'APP'>('NONE');
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Form states for new medication
+  const [medData, setMedData] = useState({
+    nome: '',
+    dosaggio: '',
+    forma: 'PILL',
+    stock_attuale: 20,
+    soglia_rifornimento: 5,
+    orario_1: '08:00',
+    orario_2: ''
+  });
+
+  const handleSaveMedication = async () => {
+    setIsSaving(true);
+    const success = await addMedication({
+      id: `med-${Date.now()}`,
+      ...medData
+    });
+    setIsSaving(false);
+    if (success) {
+      setActiveModal('NONE');
+      onClose();
+      window.location.reload();
+    } else {
+      alert("Errore nel salvataggio. Riprova.");
+    }
+  };
 
   const menuItems = [
     { id: 'MED', label: 'Farmaco', icon: Pill, color: 'text-blue-600', bg: 'bg-blue-50' },
@@ -79,16 +108,29 @@ export default function AddDataMenu({ isOpen, onClose }: AddDataMenuProps) {
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <Label htmlFor="name">Nome Farmaco</Label>
-              <Input id="name" placeholder="es. Aspirina" />
+              <Input 
+                id="name" 
+                placeholder="es. Aspirina" 
+                value={medData.nome}
+                onChange={(e) => setMedData({ ...medData, nome: e.target.value })}
+              />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="dosage">Dosaggio</Label>
-                <Input id="dosage" placeholder="es. 100mg" />
+                <Input 
+                  id="dosage" 
+                  placeholder="es. 100mg" 
+                  value={medData.dosaggio}
+                  onChange={(e) => setMedData({ ...medData, dosaggio: e.target.value })}
+                />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="form">Forma</Label>
-                <Select defaultValue="PILL">
+                <Select 
+                  value={medData.forma} 
+                  onValueChange={(val) => setMedData({ ...medData, forma: val })}
+                >
                   <SelectTrigger id="form">
                     <SelectValue placeholder="Seleziona" />
                   </SelectTrigger>
@@ -101,20 +143,58 @@ export default function AddDataMenu({ isOpen, onClose }: AddDataMenuProps) {
                 </Select>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            
+            <div className="grid grid-cols-2 gap-4 border-t pt-4">
+              <div className="grid gap-2">
+                <Label htmlFor="time1">Orario 1</Label>
+                <Input 
+                  id="time1" 
+                  type="time" 
+                  value={medData.orario_1}
+                  onChange={(e) => setMedData({ ...medData, orario_1: e.target.value })}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="time2">Orario 2 (Opz)</Label>
+                <Input 
+                  id="time2" 
+                  type="time" 
+                  value={medData.orario_2}
+                  onChange={(e) => setMedData({ ...medData, orario_2: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 border-t pt-4">
               <div className="grid gap-2">
                 <Label htmlFor="stock">Scorta Attuale</Label>
-                <Input id="stock" type="number" placeholder="es. 30" />
+                <Input 
+                  id="stock" 
+                  type="number" 
+                  value={medData.stock_attuale}
+                  onChange={(e) => setMedData({ ...medData, stock_attuale: parseInt(e.target.value) || 0 })}
+                />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="threshold">Soglia Avviso</Label>
-                <Input id="threshold" type="number" placeholder="es. 5" />
+                <Input 
+                  id="threshold" 
+                  type="number" 
+                  value={medData.soglia_rifornimento}
+                  onChange={(e) => setMedData({ ...medData, soglia_rifornimento: parseInt(e.target.value) || 0 })}
+                />
               </div>
             </div>
           </div>
           <div className="flex justify-end gap-3">
             <Button variant="ghost" onClick={() => setActiveModal('NONE')}>Annulla</Button>
-            <Button onClick={closeAll} className="bg-blue-600 hover:bg-blue-700">Salva</Button>
+            <Button 
+              disabled={isSaving || !medData.nome}
+              onClick={handleSaveMedication} 
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              {isSaving ? 'Salvataggio...' : 'Salva'}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

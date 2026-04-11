@@ -26,6 +26,24 @@ export const fetchDatabase = async () => {
   }
 };
 
+export const addMedication = async (med: MedicationData) => {
+  if (SCRIPT_URL.includes('XXXXXXXXX')) return false;
+  try {
+    await fetch(SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      cache: 'no-cache',
+      headers: { 'Content-Type': 'application/json' },
+      redirect: 'follow',
+      body: JSON.stringify({ ...med, type: 'MEDICINAL' }),
+    });
+    return true;
+  } catch (error) {
+    console.error("Errore nell'aggiunta del medicinale:", error);
+    return false;
+  }
+};
+
 export const logMedication = async (log: MedicationLog) => {
   if (SCRIPT_URL.includes('XXXXXXXXX')) {
     console.warn("Google Sheets URL non configurato. I dati non verranno salvati esternamente.");
