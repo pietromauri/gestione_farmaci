@@ -12,6 +12,8 @@ export interface MedicationData {
   soglia_rifornimento: number;
   orario_1?: string;
   orario_2?: string;
+  frequenza?: 'DAILY' | 'ALTERNATE' | 'MONTHLY';
+  ultima_assunzione?: string;
 }
 
 export const fetchDatabase = async () => {

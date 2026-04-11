@@ -45,41 +45,55 @@ export default function Oggi() {
 
       if (db && db.medicinals && db.medicinals.length > 0) {
         db.medicinals.forEach(med => {
-          if (med.orario_1) {
-            dayTasks.push({
-              id: `task-${med.id}-1`,
-              type: 'MEDICATION',
-              time: med.orario_1,
-              title: med.nome,
-              subtitle: med.dosaggio,
-              status: 'PENDING',
-              medication: {
-                id: med.id,
-                name: med.nome,
-                dosage: med.dosaggio,
-                form: med.forma as any,
-                currentStock: med.stock_attuale,
-                refillThreshold: med.soglia_rifornimento
-              }
-            });
+          // Filtra per frequenza
+          const dayOfMonth = today.getDate();
+          let shouldShow = true;
+
+          if (med.frequenza === 'ALTERNATE') {
+            // Un giorno sì e uno no (semplificato: giorni pari)
+            shouldShow = dayOfMonth % 2 === 0;
+          } else if (med.frequenza === 'MONTHLY') {
+            // Una volta al mese (il primo giorno del mese)
+            shouldShow = dayOfMonth === 1;
           }
-          if (med.orario_2) {
-            dayTasks.push({
-              id: `task-${med.id}-2`,
-              type: 'MEDICATION',
-              time: med.orario_2,
-              title: med.nome,
-              subtitle: med.dosaggio,
-              status: 'PENDING',
-              medication: {
-                id: med.id,
-                name: med.nome,
-                dosage: med.dosaggio,
-                form: med.forma as any,
-                currentStock: med.stock_attuale,
-                refillThreshold: med.soglia_rifornimento
-              }
-            });
+
+          if (shouldShow) {
+            if (med.orario_1) {
+              dayTasks.push({
+                id: `task-${med.id}-1`,
+                type: 'MEDICATION',
+                time: med.orario_1,
+                title: med.nome,
+                subtitle: med.dosaggio,
+                status: 'PENDING',
+                medication: {
+                  id: med.id,
+                  name: med.nome,
+                  dosage: med.dosaggio,
+                  form: (med.forma || 'PILL') as any,
+                  currentStock: med.stock_attuale,
+                  refillThreshold: med.soglia_rifornimento
+                }
+              });
+            }
+            if (med.orario_2) {
+              dayTasks.push({
+                id: `task-${med.id}-2`,
+                type: 'MEDICATION',
+                time: med.orario_2,
+                title: med.nome,
+                subtitle: med.dosaggio,
+                status: 'PENDING',
+                medication: {
+                  id: med.id,
+                  name: med.nome,
+                  dosage: med.dosaggio,
+                  form: (med.forma || 'PILL') as any,
+                  currentStock: med.stock_attuale,
+                  refillThreshold: med.soglia_rifornimento
+                }
+              });
+            }
           }
         });
       } else {

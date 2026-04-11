@@ -37,7 +37,8 @@ export default function AddDataMenu({ isOpen, onClose }: AddDataMenuProps) {
     stock_attuale: 20,
     soglia_rifornimento: 5,
     orario_1: '08:00',
-    orario_2: ''
+    orario_2: '',
+    frequenza: 'DAILY'
   });
 
   const handleSaveMedication = async () => {
@@ -115,16 +116,16 @@ export default function AddDataMenu({ isOpen, onClose }: AddDataMenuProps) {
                 onChange={(e) => setMedData({ ...medData, nome: e.target.value })}
               />
             </div>
+            <div className="grid gap-2">
+              <Label htmlFor="dosage">Dosaggio</Label>
+              <Input 
+                id="dosage" 
+                placeholder="es. 100mg" 
+                value={medData.dosaggio}
+                onChange={(e) => setMedData({ ...medData, dosaggio: e.target.value })}
+              />
+            </div>
             <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="dosage">Dosaggio</Label>
-                <Input 
-                  id="dosage" 
-                  placeholder="es. 100mg" 
-                  value={medData.dosaggio}
-                  onChange={(e) => setMedData({ ...medData, dosaggio: e.target.value })}
-                />
-              </div>
               <div className="grid gap-2">
                 <Label htmlFor="form">Forma</Label>
                 <Select 
@@ -139,6 +140,22 @@ export default function AddDataMenu({ isOpen, onClose }: AddDataMenuProps) {
                     <SelectItem value="DROPS">Gocce</SelectItem>
                     <SelectItem value="INJECTION">Iniezione</SelectItem>
                     <SelectItem value="OTHER">Altro</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="freq">Frequenza</Label>
+                <Select 
+                  value={medData.frequenza} 
+                  onValueChange={(val) => setMedData({ ...medData, frequenza: val as any })}
+                >
+                  <SelectTrigger id="freq">
+                    <SelectValue placeholder="Seleziona" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="DAILY">Ogni giorno</SelectItem>
+                    <SelectItem value="ALTERNATE">Giorni alterni</SelectItem>
+                    <SelectItem value="MONTHLY">Una volta al mese</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
