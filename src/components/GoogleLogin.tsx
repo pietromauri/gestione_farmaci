@@ -17,29 +17,51 @@ export const GoogleLogin: React.FC = () => {
   useEffect(() => {
     /* global google */
     const handleCredentialResponse = (response: any) => {
-      const payload = JSON.parse(atob(response.credential.split('.')[1]));
-      const profile = {
-        name: payload.name,
-        email: payload.email,
-        picture: payload.picture,
-      };
-      
-      setUser(profile);
-      localStorage.setItem('user_profile', JSON.stringify(profile));
-      localStorage.setItem('google_token', response.credential);
-      window.location.reload(); // Per aggiornare lo stato dell'app
+      try {
+        // Decodifica sicura del token JWT (gestisce accenti e caratteri speciali)
+        const base64Url = response.credential.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+        
+        const payload = JSON.parse(jsonPayload);
+        
+        const profile = {
+          name: payload.name,
+          email: payload.email,
+          picture: payload.picture,
+        };
+        
+        setUser(profile);
+        localStorage.setItem('user_profile', JSON.stringify(profile));
+        localStorage.setItem('google_token', response.credential);
+        window.location.reload();
+      } catch (error) {
+        console.error("Errore durante la decodifica del login Google:", error);
+        alert("Si è verificato un errore durante l'accesso. Controlla la console del browser (F12).");
+      }
     };
 
-    if (typeof google !== 'undefined' && !user) {
-      google.accounts.id.initialize({
-        client_id: CLIENT_ID,
-        callback: handleCredentialResponse,
-      });
-      google.accounts.id.renderButton(
-        document.getElementById("googleBtn") as HTMLElement,
-        { theme: "outline", size: "large", width: "100%" }
-      );
-    }
+    const initializeGoogle = () => {
+      if (typeof google !== 'undefined' && !user) {
+        google.accounts.id.initialize({
+          client_id: CLIENT_ID,
+          callback: handleCredentialResponse,
+          auto_select: false,
+          cancel_on_tap_outside: true
+        });
+        google.accounts.id.renderButton(
+          document.getElementById("googleBtn") as HTMLElement,
+          { theme: "outline", size: "large", width: "100%", text: "continue_with" }
+        );
+      }
+    };
+
+    // Tenta l'inizializzazione subito e riprova dopo un breve ritardo se lo script non è pronto
+    initializeGoogle();
+    const timer = setTimeout(initializeGoogle, 1000);
+    return () => clearTimeout(timer);
   }, [user]);
 
   const logout = () => {
