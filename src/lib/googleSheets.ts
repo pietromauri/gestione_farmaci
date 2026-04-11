@@ -9,7 +9,7 @@ export interface MedicationData {
   dosaggio: string;
   forma: string;
   stock_attuale: number;
-  soglia_rifornimento: number;
+  soglia: number;
   orario_1?: string;
   orario_2?: string;
   frequenza?: 'DAILY' | 'ALTERNATE' | 'MONTHLY';
@@ -19,7 +19,10 @@ export interface MedicationData {
 export const fetchDatabase = async () => {
   if (SCRIPT_URL.includes('XXXXXXXXX')) return null;
   try {
-    const response = await fetch(SCRIPT_URL);
+    // Aggiungiamo un timestamp per forzare Google a darci i dati freschi (evita cache)
+    const urlWithCacheBuster = `${SCRIPT_URL}?t=${Date.now()}`;
+    const response = await fetch(urlWithCacheBuster);
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
     const data = await response.json();
     return data as { medicinals: MedicationData[], logs: any[] };
   } catch (error) {
