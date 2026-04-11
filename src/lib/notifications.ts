@@ -1,54 +1,110 @@
 // src/lib/notifications.ts
-// Servizio per la gestione delle notifiche browser
+import { MedicationData } from './googleSheets';
 
-export const requestNotificationPermission = async () => {
-  if (!("Notification" in window)) {
-    console.error("Questo browser non supporta le notifiche desktop");
-    return false;
+export async function requestNotificationPermission(): Promise<NotificationPermission> {
+  if (!('Notification' in window)) {
+    console.warn('Questo browser non supporta le notifiche desktop');
+    return 'denied';
   }
 
-  if (Notification.permission === "granted") {
-    return true;
+  if (Notification.permission === 'granted') {
+    return 'granted';
   }
 
-  if (Notification.permission !== "denied") {
-    const permission = await Notification.requestPermission();
-    return permission === "granted";
+  const permission = await Notification.requestPermission();
+  return permission;
+}
+
+export async function registerServiceWorker() {
+  if ('serviceWorker' in navigator) {
+    try {
+      const registration = await navigator.serviceWorker.register('/sw.js');
+      console.log('Service Worker registrato con successo:', registration.scope);
+      return registration;
+    } catch (error) {
+      console.error('Registrazione del Service Worker fallita:', error);
+      return null;
+    }
   }
+  return null;
+}
 
-  return false;
-};
-
-export const sendNotification = (title: string, options?: NotificationOptions) => {
-  if (!("Notification" in window)) return;
-
-  if (Notification.permission === "granted") {
-    const notification = new Notification(title, {
-      icon: '/vite.svg', // Icona dell'app
-      badge: '/vite.svg',
-      ...options
-    });
-
-    notification.onclick = () => {
-      window.focus();
-      notification.close();
-    };
-  }
-};
+// Memorizziamo gli ID delle notifiche inviate per non ripeterle
+const sentNotifications = new Set<string>();
 
 /**
- * Controlla se è ora di prendere un medicinale
- * @param tasks Lista dei task del giorno
- * @returns I task che dovrebbero essere notificati ora
+ * Controlla se è ora di prendere un medicinale (integrato con logica Eutirox)
  */
-export const getDueTasks = (tasks: any[]) => {
+export async function checkAndFireNotifications(meds: MedicationData[]) {
+  if (Notification.permission !== 'granted') return;
+
+  const registration = await navigator.serviceWorker.ready;
+  if (!registration) return;
+
   const now = new Date();
   const currentHour = now.getHours().toString().padStart(2, '0');
   const currentMinute = now.getMinutes().toString().padStart(2, '0');
-  const currentTime = `${currentHour}:${currentMinute}`;
+  const currentTimeStr = `${currentHour}:${currentMinute}`;
+  
+  const dayOfWeek = now.getDay();
+  const adjustedDayOfWeek = dayOfWeek === 0 ? 7 : dayOfWeek;
+  const dateStr = now.toDateString();
 
-  return tasks.filter(task => {
-    // Notifichiamo solo se è PENDING e l'orario corrisponde esattamente al minuto corrente
-    return task.status === 'PENDING' && task.time === currentTime;
+  meds.forEach(med => {
+    // Logica di filtraggio per frequenza (Eutirox logic)
+    let shouldNotify = true;
+    if (med.frequenza === 'WEEKLY' && med.giorni_settimana) {
+      const allowedDays = med.giorni_settimana.split(',').map(d => parseInt(d.trim()));
+      shouldNotify = allowedDays.includes(adjustedDayOfWeek);
+    } else if (med.frequenza === 'ALTERNATE') {
+      shouldNotify = now.getDate() % 2 === 0;
+    } else if (med.frequenza === 'MONTHLY') {
+      shouldNotify = now.getDate() === 1;
+    }
+
+    if (!shouldNotify) return;
+
+    // Controlla orario_1
+    if (med.orario_1 && med.orario_1 === currentTimeStr) {
+      const notificationId = `${med.id}-orario1-${dateStr}`;
+      if (!sentNotifications.has(notificationId)) {
+        fireNotification(registration, med);
+        sentNotifications.add(notificationId);
+      }
+    }
+
+    // Controlla orario_2
+    if (med.orario_2 && med.orario_2 === currentTimeStr) {
+      const notificationId = `${med.id}-orario2-${dateStr}`;
+      if (!sentNotifications.has(notificationId)) {
+        fireNotification(registration, med);
+        sentNotifications.add(notificationId);
+      }
+    }
   });
-};
+}
+
+function fireNotification(registration: ServiceWorkerRegistration, med: MedicationData) {
+  const title = `Promemoria Medicinale: ${med.nome}`;
+  const options = {
+    body: `È ora di prendere ${med.nome} (${med.dosaggio}).`,
+    icon: '/vite.svg', 
+    badge: '/vite.svg',
+    data: { url: window.location.origin },
+    requireInteraction: true,
+    tag: `med-${med.id}` // Sostituisce eventuali notifiche precedenti dello stesso farmaco
+  };
+
+  registration.showNotification(title, options);
+}
+
+export async function sendTestNotification() {
+    if (Notification.permission === 'granted') {
+        const registration = await navigator.serviceWorker.ready;
+        registration.showNotification('Test Notifica', {
+            body: 'Le notifiche funzionano correttamente!',
+            icon: '/vite.svg',
+            requireInteraction: true
+        });
+    }
+}

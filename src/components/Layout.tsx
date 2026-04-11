@@ -17,6 +17,9 @@ export default function Layout({ children }: LayoutProps) {
   // Attiva il gestore delle notifiche in background
   useNotificationManager();
 
+  // Initialize and run the notification manager globally
+  useNotificationManager();
+
   const navItems = [
     { path: '/', label: 'Oggi', icon: CalendarDays },
     { path: '/diario', label: 'Diario', icon: BookOpen },

@@ -5,14 +5,13 @@ import { Button } from '@/components/ui/button';
 import { mockMedications } from '@/lib/mockData';
 import { GoogleLogin } from '@/components/GoogleLogin';
 import { fetchDatabase, MedicationData } from '@/lib/googleSheets';
-import { requestNotificationPermission } from '@/lib/notifications';
+import { useNotificationManager } from '@/hooks/useNotificationManager';
+import { sendTestNotification } from '@/lib/notifications';
 
 export default function Profilo() {
+  const { permission, requestPermission } = useNotificationManager();
   const [meds, setMeds] = React.useState<MedicationData[]>([]);
   const [loading, setLoading] = React.useState(true);
-  const [notificationStatus, setNotificationStatus] = React.useState<NotificationPermission>(
-    typeof Notification !== 'undefined' ? Notification.permission : 'denied'
-  );
 
   React.useEffect(() => {
     const loadData = async () => {
@@ -27,7 +26,7 @@ export default function Profilo() {
           dosaggio: m.dosage,
           forma: m.form,
           stock_attuale: m.currentStock || 0,
-          soglia_rifornimento: m.refillThreshold || 0
+          soglia: m.refillThreshold || 0
         })));
       }
       setLoading(false);
@@ -35,12 +34,11 @@ export default function Profilo() {
     loadData();
   }, []);
 
-  const handleNotificationRequest = async () => {
-    const granted = await requestNotificationPermission();
-    if (granted) {
-      setNotificationStatus('granted');
+  const handleNotificationToggle = async () => {
+    if (permission !== 'granted') {
+      await requestPermission();
     } else {
-      setNotificationStatus('denied');
+      sendTestNotification();
     }
   };
 
@@ -61,15 +59,15 @@ export default function Profilo() {
             <Card key={med.id} className="border-none shadow-sm">
               <CardContent className="p-4 flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <div className={`p-2 rounded-lg ${med.stock_attuale <= med.soglia_rifornimento ? 'bg-red-100' : 'bg-slate-100'}`}>
-                    <Package className={`h-5 w-5 ${med.stock_attuale <= med.soglia_rifornimento ? 'text-red-600' : 'text-slate-600'}`} />
+                  <div className={`p-2 rounded-lg ${med.stock_attuale <= (med.soglia || 0) ? 'bg-red-100' : 'bg-slate-100'}`}>
+                    <Package className={`h-5 w-5 ${med.stock_attuale <= (med.soglia || 0) ? 'text-red-600' : 'text-slate-600'}`} />
                   </div>
                   <div>
                     <h3 className="font-bold text-slate-900">{med.nome}</h3>
                     <p className="text-xs text-slate-500">{med.stock_attuale} {med.forma === 'PILL' ? 'pillole' : 'dosi'} rimaste</p>
                   </div>
                 </div>
-                {med.stock_attuale <= med.soglia_rifornimento && (
+                {med.stock_attuale <= (med.soglia || 0) && (
                   <div className="flex items-center text-red-600 text-[10px] font-bold uppercase bg-red-50 px-2 py-1 rounded">
                     <AlertCircle className="h-3 w-3 mr-1" />
                     Rifornire
@@ -87,18 +85,22 @@ export default function Profilo() {
         <Card className="border-none shadow-sm overflow-hidden">
           <div className="divide-y divide-slate-50">
             <button 
-              onClick={handleNotificationRequest}
+              onClick={handleNotificationToggle}
               className="w-full p-4 flex items-center justify-between hover:bg-slate-50 transition-colors group"
             >
               <div className="flex items-center space-x-3">
-                <Bell className={`h-5 w-5 ${notificationStatus === 'granted' ? 'text-green-600' : 'text-purple-600'}`} />
+                <Bell className={`h-5 w-5 ${permission === 'granted' ? 'text-green-600' : 'text-purple-600'}`} />
                 <span className="font-medium text-slate-700">Notifiche e Promemoria</span>
               </div>
-              <div className="flex items-center">
-                {notificationStatus === 'granted' && <CheckCircle2 className="h-4 w-4 text-green-500 mr-2" />}
+              <div className="flex items-center space-x-2">
+                <span className={`text-xs font-medium ${permission === 'granted' ? 'text-green-600' : 'text-slate-400'}`}>
+                  {permission === 'granted' ? 'Attive (Test)' : (permission === 'denied' ? 'Bloccate' : 'Disattivate')}
+                </span>
+                {permission === 'granted' && <CheckCircle2 className="h-4 w-4 text-green-500" />}
                 <ChevronRight className="h-5 w-5 text-slate-300 group-hover:text-slate-400 transition-colors" />
               </div>
             </button>
+            
             {[
               { icon: Shield, label: 'Privacy e Sicurezza', color: 'text-green-600' },
               { icon: Settings, label: 'Preferenze App', color: 'text-slate-600' },

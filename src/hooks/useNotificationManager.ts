@@ -1,75 +1,80 @@
 // src/hooks/useNotificationManager.ts
-import { useEffect, useRef } from 'react';
-import { fetchDatabase } from '@/lib/googleSheets';
-import { getDueTasks, sendNotification } from '@/lib/notifications';
-import { mockSchedules, mockMedications } from '@/lib/mockData';
+import { useEffect, useState, useRef } from 'react';
+import { fetchDatabase, MedicationData } from '../lib/googleSheets';
+import { mockMedications } from '../lib/mockData';
+import { registerServiceWorker, requestNotificationPermission, checkAndFireNotifications } from '../lib/notifications';
 
-export const useNotificationManager = () => {
-  const lastNotifiedMinute = useRef<string>('');
+export function useNotificationManager() {
+  const [permission, setPermission] = useState<NotificationPermission>(
+    typeof Notification !== 'undefined' ? Notification.permission : 'denied'
+  );
+  const [meds, setMeds] = useState<MedicationData[]>([]);
+  const intervalRef = useRef<any>(null);
 
+  // Initialize service worker and check permission
   useEffect(() => {
-    const checkNotifications = async () => {
-      const now = new Date();
-      const currentMinute = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-      
-      // Evita notifiche multiple nello stesso minuto
-      if (currentMinute === lastNotifiedMinute.current) return;
+    const init = async () => {
+      await registerServiceWorker();
+      if ('Notification' in window) {
+        setPermission(Notification.permission);
+      }
+    };
+    init();
+  }, []);
 
+  // Fetch medications periodically
+  useEffect(() => {
+    const loadMeds = async () => {
       const db = await fetchDatabase();
-      let tasks = [];
-
-      if (db && db.medicinals) {
-        const today = new Date();
-        const dayOfWeek = today.getDay();
-        const adjustedDayOfWeek = dayOfWeek === 0 ? 7 : dayOfWeek;
-
-        // Converti i medicinali del DB in task
-        db.medicinals.forEach(med => {
-          let shouldNotify = true;
-          if (med.frequenza === 'WEEKLY' && med.giorni_settimana) {
-            const allowedDays = med.giorni_settimana.split(',').map(d => parseInt(d.trim()));
-            shouldNotify = allowedDays.includes(adjustedDayOfWeek);
-          } else if (med.frequenza === 'ALTERNATE') {
-            shouldNotify = today.getDate() % 2 === 0;
-          } else if (med.frequenza === 'MONTHLY') {
-            shouldNotify = today.getDate() === 1;
-          }
-
-          if (shouldNotify) {
-            if (med.orario_1) tasks.push({ time: med.orario_1, title: med.nome, status: 'PENDING' });
-            if (med.orario_2) tasks.push({ time: med.orario_2, title: med.nome, status: 'PENDING' });
-          }
-        });
-      }
- else {
+      if (db && db.medicinals && db.medicinals.length > 0) {
+        setMeds(db.medicinals);
+      } else {
         // Fallback ai mock
-        mockSchedules.forEach(s => {
-          const med = mockMedications.find(m => m.id === s.medicationId);
-          if (med) tasks.push({ time: s.time, title: med.name, status: 'PENDING' });
-        });
-      }
-
-      const dueTasks = getDueTasks(tasks);
-      
-      dueTasks.forEach(task => {
-        sendNotification(`È ora di: ${task.title}`, {
-          body: `Orario previsto: ${task.time}. Tocca per aprire l'app.`,
-          tag: `med-${task.title}-${task.time}`, // Evita duplicati
-          renotify: true
-        });
-      });
-
-      if (dueTasks.length > 0) {
-        lastNotifiedMinute.current = currentMinute;
+        setMeds(mockMedications.map(m => ({
+          id: m.id,
+          nome: m.name,
+          dosaggio: m.dosage,
+          forma: m.form,
+          stock_attuale: m.currentStock || 0,
+          soglia: m.refillThreshold || 0,
+          orario_1: '08:00',
+          orario_2: '20:00'
+        })));
       }
     };
 
-    // Controllo ogni 30 secondi per precisione
-    const interval = setInterval(checkNotifications, 30000);
-    
-    // Esegui subito al caricamento
-    checkNotifications();
+    loadMeds();
 
-    return () => clearInterval(interval);
+    // Ricarica i dati ogni 10 minuti
+    const fetchInterval = setInterval(loadMeds, 10 * 60 * 1000);
+    return () => clearInterval(fetchInterval);
   }, []);
-};
+
+  // Check notifications every minute
+  useEffect(() => {
+    if (permission !== 'granted' || meds.length === 0) return;
+
+    // Run once immediately
+    checkAndFireNotifications(meds);
+
+    // Then check every minute (60s)
+    intervalRef.current = setInterval(() => {
+      checkAndFireNotifications(meds);
+    }, 60 * 1000);
+
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [meds, permission]);
+
+  const requestPermission = async () => {
+    const newPermission = await requestNotificationPermission();
+    setPermission(newPermission);
+    return newPermission === 'granted';
+  };
+
+  return {
+    permission,
+    requestPermission,
+  };
+}
