@@ -8,8 +8,9 @@ HealTrack è un'applicazione web moderna e intuitiva progettata per aiutarti a g
 - **🔐 Google Login:** Accesso sicuro con il tuo account Google per una gestione personalizzata.
 - **📊 Database su Google Sheets:** Tutti i tuoi dati (farmaci e assunzioni) sono salvati in tempo reale su un tuo Foglio Google privato.
 - **💊 Gestione Scorte:** Monitoraggio automatico delle pillole rimaste con avvisi di rifornimento.
-- **⏰ Frequenze Complesse:** Gestione automatica di farmaci giornalieri, a giorni alterni o mensili.
-- **📱 Mobile First:** Interfaccia ottimizzata per l'uso da smartphone.
+- **⏰ Frequenze Avanzate:** Gestione di farmaci giornalieri, a giorni alterni, mensili o **giorni specifici della settimana** (es. dosaggi diversi per Eutirox Lun-Ven e Sab-Dom).
+- **🔔 Notifiche Push (PWA):** Promemoria automatici all'orario stabilito, funzionanti anche in background tramite Service Worker.
+- **📱 Mobile First & PWA:** Interfaccia ottimizzata per smartphone e installabile come app nativa.
 
 ## 🛠️ Architettura Tecnica
 
@@ -22,8 +23,9 @@ HealTrack è un'applicazione web moderna e intuitiva progettata per aiutarti a g
 
 ### 1. Preparazione del Google Sheet
 1. Crea un nuovo **Foglio Google**.
-2. Vai su **Estensioni** > **Apps Script** e incolla il codice del backend (contenuto nella documentazione interna).
-3. Esegui la funzione `setupDatabase` per creare le tabelle `Logs` e `Medicinals`.
+2. Assicurati che il foglio `medicinals` abbia le seguenti colonne (dalla A alla J):
+   `id`, `nome`, `dosaggio`, `forma`, `stock_attuale`, `soglia`, `orario_1`, `orario_2`, `frequenza`, **`giorni_settimana`**.
+3. Vai su **Estensioni** > **Apps Script** e incolla l'ultima versione del codice del backend (V8 runtime consigliato).
 4. Clicca su **Distribuisci** > **Nuova distribuzione** > **Applicazione Web**.
 5. Imposta "Chi ha accesso" su **Chiunque** e copia l'URL generato (`/exec`).
 
