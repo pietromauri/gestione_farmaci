@@ -38,14 +38,25 @@ export default function AddDataMenu({ isOpen, onClose }: AddDataMenuProps) {
     soglia_rifornimento: 5,
     orario_1: '08:00',
     orario_2: '',
-    frequenza: 'DAILY'
+    frequenza: 'DAILY' as 'DAILY' | 'ALTERNATE' | 'MONTHLY' | 'WEEKLY',
+    giorni_settimana: ''
   });
+
+  const [selectedDays, setSelectedDays] = useState<number[]>([]);
+
+  const toggleDay = (day: number) => {
+    setSelectedDays(prev => 
+      prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day].sort()
+    );
+  };
 
   const handleSaveMedication = async () => {
     setIsSaving(true);
     const success = await addMedication({
       id: `med-${Date.now()}`,
-      ...medData
+      ...medData,
+      soglia: medData.soglia_rifornimento,
+      giorni_settimana: medData.frequenza === 'WEEKLY' ? selectedDays.join(',') : ''
     });
     setIsSaving(false);
     if (success) {
@@ -154,12 +165,42 @@ export default function AddDataMenu({ isOpen, onClose }: AddDataMenuProps) {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="DAILY">Ogni giorno</SelectItem>
+                    <SelectItem value="WEEKLY">Giorni specifici</SelectItem>
                     <SelectItem value="ALTERNATE">Giorni alterni</SelectItem>
                     <SelectItem value="MONTHLY">Una volta al mese</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
+
+            {medData.frequenza === 'WEEKLY' && (
+              <div className="grid gap-2 border-t pt-4">
+                <Label>Seleziona i giorni della settimana</Label>
+                <div className="flex justify-between gap-1">
+                  {[
+                    { id: 1, label: 'L' },
+                    { id: 2, label: 'M' },
+                    { id: 3, label: 'M' },
+                    { id: 4, label: 'G' },
+                    { id: 5, label: 'V' },
+                    { id: 6, label: 'S' },
+                    { id: 7, label: 'D' },
+                  ].map((day) => (
+                    <button
+                      key={day.id}
+                      onClick={() => toggleDay(day.id)}
+                      className={`h-9 w-9 rounded-full text-xs font-bold transition-all ${
+                        selectedDays.includes(day.id)
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                      }`}
+                    >
+                      {day.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
             
             <div className="grid grid-cols-2 gap-4 border-t pt-4">
               <div className="grid gap-2">

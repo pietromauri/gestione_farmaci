@@ -12,7 +12,8 @@ export interface MedicationData {
   soglia: number;
   orario_1?: string;
   orario_2?: string;
-  frequenza?: 'DAILY' | 'ALTERNATE' | 'MONTHLY';
+  frequenza?: 'DAILY' | 'ALTERNATE' | 'MONTHLY' | 'WEEKLY';
+  giorni_settimana?: string; // Es: "1,2,3,4,5"
   ultima_assunzione?: string;
 }
 

@@ -58,14 +58,19 @@ export default function Oggi() {
         db.medicinals.forEach(med => {
           // Filtra per frequenza
           const dayOfMonth = today.getDate();
+          const dayOfWeek = today.getDay(); // 0=Sun, 1=Mon...
+          // Convertiamo 0 (Dom) in 7 per nostra convenienza se vogliamo Lun=1
+          const adjustedDayOfWeek = dayOfWeek === 0 ? 7 : dayOfWeek;
+
           let shouldShow = true;
 
           if (med.frequenza === 'ALTERNATE') {
-            // Un giorno sì e uno no (semplificato: giorni pari)
             shouldShow = dayOfMonth % 2 === 0;
           } else if (med.frequenza === 'MONTHLY') {
-            // Una volta al mese (il primo giorno del mese)
             shouldShow = dayOfMonth === 1;
+          } else if (med.frequenza === 'WEEKLY' && med.giorni_settimana) {
+            const allowedDays = med.giorni_settimana.split(',').map(d => parseInt(d.trim()));
+            shouldShow = allowedDays.includes(adjustedDayOfWeek);
           }
 
           if (shouldShow) {

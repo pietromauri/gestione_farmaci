@@ -1,14 +1,18 @@
 import React from 'react';
-import { User, Settings, Package, Bell, Shield, LogOut, ChevronRight, AlertCircle } from 'lucide-react';
+import { User, Settings, Package, Bell, Shield, LogOut, ChevronRight, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { mockMedications } from '@/lib/mockData';
 import { GoogleLogin } from '@/components/GoogleLogin';
 import { fetchDatabase, MedicationData } from '@/lib/googleSheets';
+import { requestNotificationPermission } from '@/lib/notifications';
 
 export default function Profilo() {
   const [meds, setMeds] = React.useState<MedicationData[]>([]);
   const [loading, setLoading] = React.useState(true);
+  const [notificationStatus, setNotificationStatus] = React.useState<NotificationPermission>(
+    typeof Notification !== 'undefined' ? Notification.permission : 'denied'
+  );
 
   React.useEffect(() => {
     const loadData = async () => {
@@ -30,6 +34,15 @@ export default function Profilo() {
     };
     loadData();
   }, []);
+
+  const handleNotificationRequest = async () => {
+    const granted = await requestNotificationPermission();
+    if (granted) {
+      setNotificationStatus('granted');
+    } else {
+      setNotificationStatus('denied');
+    }
+  };
 
   return (
     <div className="max-w-md mx-auto p-4 space-y-6 pb-24">
@@ -73,8 +86,20 @@ export default function Profilo() {
         <h2 className="text-sm font-bold text-slate-400 uppercase tracking-widest px-1">Impostazioni</h2>
         <Card className="border-none shadow-sm overflow-hidden">
           <div className="divide-y divide-slate-50">
+            <button 
+              onClick={handleNotificationRequest}
+              className="w-full p-4 flex items-center justify-between hover:bg-slate-50 transition-colors group"
+            >
+              <div className="flex items-center space-x-3">
+                <Bell className={`h-5 w-5 ${notificationStatus === 'granted' ? 'text-green-600' : 'text-purple-600'}`} />
+                <span className="font-medium text-slate-700">Notifiche e Promemoria</span>
+              </div>
+              <div className="flex items-center">
+                {notificationStatus === 'granted' && <CheckCircle2 className="h-4 w-4 text-green-500 mr-2" />}
+                <ChevronRight className="h-5 w-5 text-slate-300 group-hover:text-slate-400 transition-colors" />
+              </div>
+            </button>
             {[
-              { icon: Bell, label: 'Notifiche e Promemoria', color: 'text-purple-600' },
               { icon: Shield, label: 'Privacy e Sicurezza', color: 'text-green-600' },
               { icon: Settings, label: 'Preferenze App', color: 'text-slate-600' },
             ].map((item, i) => (
