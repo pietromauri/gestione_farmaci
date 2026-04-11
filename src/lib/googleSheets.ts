@@ -1,8 +1,7 @@
 // src/lib/googleSheets.ts
 // Servizio per la persistenza dei dati su Google Sheets
 
-// Questo URL andrà sostituito con quello fornito da Google Apps Script
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz_XXXXXXXXX/exec'; 
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxodh2BvY4QSlRtRRuKEw8y3nTSKi8v_WLuh-IcCyGDbt5kYhg1Xr30DaDS1jSQ8rfVTQ/exec'; 
 
 export interface MedicationLog {
   name: string;
