@@ -53,7 +53,7 @@ export const GoogleLogin: React.FC = () => {
         });
         google.accounts.id.renderButton(
           document.getElementById("googleBtn") as HTMLElement,
-          { theme: "outline", size: "large", width: "100%", text: "continue_with" }
+          { type: "standard", theme: "outline", size: "large", width: 250, text: "continue_with" }
         );
       }
     };

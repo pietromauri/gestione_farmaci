@@ -44,6 +44,17 @@ export default function Oggi() {
       const dayTasks: Task[] = [];
 
       if (db && db.medicinals && db.medicinals.length > 0) {
+        const profile = localStorage.getItem('user_profile');
+        let currentUserId = 'anonymous';
+        if (profile) {
+          try {
+            const user = JSON.parse(profile);
+            currentUserId = user.email || 'anonymous';
+          } catch (e) {
+            // ignore
+          }
+        }
+
         db.medicinals.forEach(med => {
           // Filtra per frequenza
           const dayOfMonth = today.getDate();
@@ -68,6 +79,7 @@ export default function Oggi() {
                 status: 'PENDING',
                 medication: {
                   id: med.id,
+                  userId: currentUserId,
                   name: med.nome,
                   dosage: med.dosaggio,
                   form: (med.forma || 'PILL') as any,
@@ -86,6 +98,7 @@ export default function Oggi() {
                 status: 'PENDING',
                 medication: {
                   id: med.id,
+                  userId: currentUserId,
                   name: med.nome,
                   dosage: med.dosaggio,
                   form: (med.forma || 'PILL') as any,
