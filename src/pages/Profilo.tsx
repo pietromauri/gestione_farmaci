@@ -3,19 +3,14 @@ import { User, Settings, Package, Bell, Shield, LogOut, ChevronRight, AlertCircl
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { mockMedications } from '@/lib/mockData';
+import { GoogleLogin } from '@/components/GoogleLogin';
 
 export default function Profilo() {
   return (
     <div className="max-w-md mx-auto p-4 space-y-6 pb-24">
-      <header className="flex items-center space-x-4 mb-6">
-        <div className="h-20 w-20 rounded-full bg-blue-100 flex items-center justify-center border-4 border-white shadow-md">
-          <User className="h-10 w-10 text-blue-600" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Laura G.</h1>
-          <p className="text-slate-500 text-sm">laurage.13@gmail.com</p>
-          <Button variant="link" className="p-0 h-auto text-blue-600 text-xs font-bold uppercase tracking-wider">Modifica Profilo</Button>
-        </div>
+      <header className="mb-6">
+        <h1 className="text-2xl font-bold text-slate-900 mb-4">Account</h1>
+        <GoogleLogin />
       </header>
 
       {/* Inventory Section */}

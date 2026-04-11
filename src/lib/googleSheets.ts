@@ -10,12 +10,20 @@ export interface MedicationLog {
   time: string;
   status: 'taken' | 'missed' | 'pending';
   date: string;
+  userEmail?: string;
 }
 
 export const logMedication = async (log: MedicationLog) => {
   if (SCRIPT_URL.includes('XXXXXXXXX')) {
     console.warn("Google Sheets URL non configurato. I dati non verranno salvati esternamente.");
     return false;
+  }
+
+  // Aggiungi l'email dell'utente se loggato
+  const profile = localStorage.getItem('user_profile');
+  if (profile) {
+    const user = JSON.parse(profile);
+    log.userEmail = user.email;
   }
 
   try {
