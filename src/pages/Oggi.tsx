@@ -84,7 +84,7 @@ export default function Oggi() {
                   dosage: med.dosaggio,
                   form: (med.forma || 'PILL') as any,
                   currentStock: med.stock_attuale,
-                  refillThreshold: med.soglia_rifornimento
+                  refillThreshold: med.soglia
                 }
               });
             }
@@ -103,7 +103,7 @@ export default function Oggi() {
                   dosage: med.dosaggio,
                   form: (med.forma || 'PILL') as any,
                   currentStock: med.stock_attuale,
-                  refillThreshold: med.soglia_rifornimento
+                  refillThreshold: med.soglia
                 }
               });
             }

@@ -4,6 +4,7 @@ import { CalendarDays, BookOpen, LineChart, User, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'motion/react';
 import AddDataMenu from './AddDataMenu';
+import { useNotificationManager } from '@/hooks/useNotificationManager';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -12,6 +13,9 @@ interface LayoutProps {
 export default function Layout({ children }: LayoutProps) {
   const location = useLocation();
   const [isAddMenuOpen, setIsAddMenuOpen] = useState(false);
+
+  // Initialize and run the notification manager globally
+  useNotificationManager();
 
   const navItems = [
     { path: '/', label: 'Oggi', icon: CalendarDays },

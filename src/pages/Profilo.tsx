@@ -5,8 +5,11 @@ import { Button } from '@/components/ui/button';
 import { mockMedications } from '@/lib/mockData';
 import { GoogleLogin } from '@/components/GoogleLogin';
 import { fetchDatabase, MedicationData } from '@/lib/googleSheets';
+import { useNotificationManager } from '@/hooks/useNotificationManager';
+import { sendTestNotification } from '@/lib/notifications';
 
 export default function Profilo() {
+  const { permission, requestPermission } = useNotificationManager();
   const [meds, setMeds] = React.useState<MedicationData[]>([]);
   const [loading, setLoading] = React.useState(true);
 
@@ -23,7 +26,7 @@ export default function Profilo() {
           dosaggio: m.dosage,
           forma: m.form,
           stock_attuale: m.currentStock || 0,
-          soglia_rifornimento: m.refillThreshold || 0
+          soglia: m.refillThreshold || 0
         })));
       }
       setLoading(false);
@@ -48,15 +51,15 @@ export default function Profilo() {
             <Card key={med.id} className="border-none shadow-sm">
               <CardContent className="p-4 flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <div className={`p-2 rounded-lg ${med.stock_attuale <= med.soglia_rifornimento ? 'bg-red-100' : 'bg-slate-100'}`}>
-                    <Package className={`h-5 w-5 ${med.stock_attuale <= med.soglia_rifornimento ? 'text-red-600' : 'text-slate-600'}`} />
+                  <div className={`p-2 rounded-lg ${med.stock_attuale <= med.soglia ? 'bg-red-100' : 'bg-slate-100'}`}>
+                    <Package className={`h-5 w-5 ${med.stock_attuale <= med.soglia ? 'text-red-600' : 'text-slate-600'}`} />
                   </div>
                   <div>
                     <h3 className="font-bold text-slate-900">{med.nome}</h3>
                     <p className="text-xs text-slate-500">{med.stock_attuale} {med.forma === 'PILL' ? 'pillole' : 'dosi'} rimaste</p>
                   </div>
                 </div>
-                {med.stock_attuale <= med.soglia_rifornimento && (
+                {med.stock_attuale <= med.soglia && (
                   <div className="flex items-center text-red-600 text-[10px] font-bold uppercase bg-red-50 px-2 py-1 rounded">
                     <AlertCircle className="h-3 w-3 mr-1" />
                     Rifornire
@@ -74,16 +77,35 @@ export default function Profilo() {
         <Card className="border-none shadow-sm overflow-hidden">
           <div className="divide-y divide-slate-50">
             {[
-              { icon: Bell, label: 'Notifiche e Promemoria', color: 'text-purple-600' },
+              {
+                icon: Bell,
+                label: 'Notifiche e Promemoria',
+                color: 'text-purple-600',
+                action: async () => {
+                  if (permission !== 'granted') {
+                    await requestPermission();
+                  } else {
+                    sendTestNotification();
+                  }
+                },
+                status: permission === 'granted' ? 'Attive' : (permission === 'denied' ? 'Bloccate' : 'Disattivate')
+              },
               { icon: Shield, label: 'Privacy e Sicurezza', color: 'text-green-600' },
               { icon: Settings, label: 'Preferenze App', color: 'text-slate-600' },
             ].map((item, i) => (
-              <button key={i} className="w-full p-4 flex items-center justify-between hover:bg-slate-50 transition-colors group">
+              <button key={i} onClick={item.action} className="w-full p-4 flex items-center justify-between hover:bg-slate-50 transition-colors group">
                 <div className="flex items-center space-x-3">
                   <item.icon className={`h-5 w-5 ${item.color}`} />
                   <span className="font-medium text-slate-700">{item.label}</span>
                 </div>
-                <ChevronRight className="h-5 w-5 text-slate-300 group-hover:text-slate-400 transition-colors" />
+                <div className="flex items-center space-x-2">
+                  {item.status && (
+                    <span className={`text-xs font-medium ${permission === 'granted' ? 'text-green-600' : 'text-slate-400'}`}>
+                      {item.status}
+                    </span>
+                  )}
+                  <ChevronRight className="h-5 w-5 text-slate-300 group-hover:text-slate-400 transition-colors" />
+                </div>
               </button>
             ))}
           </div>
