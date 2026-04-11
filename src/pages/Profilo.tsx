@@ -33,7 +33,11 @@ export default function Profilo() {
 
   return (
     <div className="max-w-md mx-auto p-4 space-y-6 pb-24">
-...
+      <header className="mb-6">
+        <h1 className="text-2xl font-bold text-slate-900 mb-4">Account</h1>
+        <GoogleLogin />
+      </header>
+
       {/* Inventory Section */}
       <section className="space-y-3">
         <h2 className="text-sm font-bold text-slate-400 uppercase tracking-widest px-1">Le tue Scorte</h2>
@@ -59,10 +63,6 @@ export default function Profilo() {
                   </div>
                 )}
               </CardContent>
-            </Card>
-          ))}
-        </div>
-      </section>
             </Card>
           ))}
         </div>
@@ -97,4 +97,3 @@ export default function Profilo() {
     </div>
   );
 }
-
