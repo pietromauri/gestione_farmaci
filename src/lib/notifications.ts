@@ -22,7 +22,6 @@ export async function registerServiceWorker() {
     try {
       // Usiamo ./sw.js invece di /sw.js per supportare GitHub Pages (percorso relativo)
       const registration = await navigator.serviceWorker.register('./sw.js');
-      console.log('Service Worker registrato con successo:', registration.scope);
       return registration;
     } catch (error) {
       console.error('Registrazione del Service Worker fallita:', error);
