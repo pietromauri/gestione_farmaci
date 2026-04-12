@@ -18,6 +18,7 @@ import { Label } from '@/components/ui/label';
 import { mockMedications, mockSchedules, mockAppointments } from '@/lib/mockData';
 import { Medication, Schedule, Appointment } from '@/types';
 import { logMedication, fetchDatabase } from '@/lib/googleSheets';
+import { useNotificationManager } from '@/hooks/useNotificationManager';
 
 type TaskType = 'MEDICATION' | 'APPOINTMENT' | 'MEASUREMENT';
 

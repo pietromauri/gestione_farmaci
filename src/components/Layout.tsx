@@ -14,10 +14,7 @@ export default function Layout({ children }: LayoutProps) {
   const location = useLocation();
   const [isAddMenuOpen, setIsAddMenuOpen] = useState(false);
   
-  // Attiva il gestore delle notifiche in background
-  useNotificationManager();
-
-  // Initialize and run the notification manager globally
+  // Attiva il gestore delle notifiche in background a livello globale
   useNotificationManager();
 
   const navItems = [
