@@ -87,23 +87,31 @@ export default function Oggi() {
             
             // Funzione per determinare lo stato iniziale basandosi sui log
             const getInitialStatus = (time: string) => {
-              if (!db.logs) return 'PENDING';
+              if (!db.logs || !Array.isArray(db.logs)) return 'PENDING';
+              
+              const todayStr = format(today, 'yyyy-MM-dd');
+              
               const logEntry = db.logs.find(l => {
-                const logName = l.Nome || l.name;
-                const logTime = l.Orario || l.time;
-                const logDate = l.Data || l.date;
-                const logStatus = l.Stato || l.status;
+                // Estraiamo i valori puliti gestendo sia chiavi italiane che inglesi
+                const logName = (l.Nome || l.name || '').toString().trim();
+                const logTime = (l.Orario || l.time || '').toString().trim();
+                const logDate = (l.Data || l.date || '').toString();
+                const medNomePulito = (med.nome || '').trim();
 
+                // Confronto flessibile: 
+                // 1. Il nome deve coincidere (senza spazi)
+                // 2. L'orario deve coincidere
+                // 3. La data deve contenere la stringa odierna (es. 2026-04-12)
                 return (
-                  logName === med.nome && 
+                  logName.toLowerCase() === medNomePulito.toLowerCase() && 
                   logTime === time && 
-                  (String(logDate).includes(todayStr))
+                  logDate.includes(todayStr)
                 );
               });
 
               if (logEntry) {
-                const status = logEntry.Stato || logEntry.status;
-                return status === 'taken' || status === 'TAKEN' ? 'TAKEN' : 'SKIPPED';
+                const status = (logEntry.Stato || logEntry.status || '').toLowerCase();
+                return status === 'taken' ? 'TAKEN' : 'SKIPPED';
               }
               return 'PENDING';
             };
