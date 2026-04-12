@@ -18,7 +18,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { MedicationForm } from '@/types';
-import { addMedication } from '@/lib/googleSheets';
+import { addMedication, MedicationData } from '@/lib/googleSheets';
+
+type ModalType = 'NONE' | 'MED' | 'SYMPTOM' | 'MOOD' | 'APP';
 
 interface AddDataMenuProps {
   isOpen: boolean;
@@ -26,7 +28,7 @@ interface AddDataMenuProps {
 }
 
 export default function AddDataMenu({ isOpen, onClose }: AddDataMenuProps) {
-  const [activeModal, setActiveModal] = useState<'NONE' | 'MED' | 'SYMPTOM' | 'MOOD' | 'APP'>('NONE');
+  const [activeModal, setActiveModal] = useState<ModalType>('NONE');
   const [isSaving, setIsSaving] = useState(false);
 
   // Form states for new medication
@@ -53,7 +55,7 @@ export default function AddDataMenu({ isOpen, onClose }: AddDataMenuProps) {
   const handleSaveMedication = async () => {
     setIsSaving(true);
     // Creiamo l'oggetto MedicationData rispettando l'interfaccia e la struttura delle colonne
-    const newMed: any = {
+    const newMed: MedicationData = {
       id: `med-${Date.now()}`,
       nome: medData.nome,
       dosaggio: medData.dosaggio,
@@ -63,8 +65,8 @@ export default function AddDataMenu({ isOpen, onClose }: AddDataMenuProps) {
       orario_1: medData.orario_1,
       orario_2: medData.orario_2,
       frequenza: medData.frequenza,
-      giorni_settimana: medData.frequenza === 'WEEKLY' ? selectedDays.join(',') : '',
-      ultima_assunzione: ''
+      ultima_assunzione: '',
+      giorni_settimana: medData.frequenza === 'WEEKLY' ? selectedDays.join(',') : ''
     };
     
     const success = await addMedication(newMed);
@@ -78,15 +80,15 @@ export default function AddDataMenu({ isOpen, onClose }: AddDataMenuProps) {
     }
   };
 
-  const menuItems = [
+  const menuItems: { id: ModalType; label: string; icon: any; color: string; bg: string }[] = [
     { id: 'MED', label: 'Farmaco', icon: Pill, color: 'text-blue-600', bg: 'bg-blue-50' },
     { id: 'SYMPTOM', label: 'Sintomo', icon: Activity, color: 'text-orange-600', bg: 'bg-orange-50' },
     { id: 'MOOD', label: 'Umore', icon: Smile, color: 'text-yellow-600', bg: 'bg-yellow-50' },
     { id: 'APP', label: 'Appuntamento', icon: Calendar, color: 'text-purple-600', bg: 'bg-purple-50' },
   ];
 
-  const handleItemClick = (id: string) => {
-    setActiveModal(id as any);
+  const handleItemClick = (id: ModalType) => {
+    setActiveModal(id);
   };
 
   const closeAll = () => {
