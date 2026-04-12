@@ -1,6 +1,8 @@
 // src/lib/notifications.ts
 import { MedicationData } from './googleSheets';
 
+const sentNotifications = new Set<string>();
+
 export async function requestNotificationPermission(): Promise<NotificationPermission> {
   if (!('Notification' in window)) {
     console.warn('Questo browser non supporta le notifiche desktop');
@@ -55,8 +57,8 @@ export async function checkAndFireNotifications(meds: MedicationData[]) {
     let shouldNotify = true;
     if (med.frequenza === 'WEEKLY' && med.giorni_settimana) {
       // FIX: Forza giorni_settimana a stringa per evitare crash se è un numero singolo da Google Sheets
-      const daysStr = String(med.giorni_settimana);
-      const allowedDays = daysStr.split(',').map(d => parseInt(d.trim()));
+      const daysStr = String(med.giorni_settimana || '');
+      const allowedDays = daysStr.split(',').map(d => parseInt(d.trim())).filter(n => !isNaN(n));
       shouldNotify = allowedDays.includes(adjustedDayOfWeek);
     } else if (med.frequenza === 'ALTERNATE') {
       shouldNotify = now.getDate() % 2 === 0;
