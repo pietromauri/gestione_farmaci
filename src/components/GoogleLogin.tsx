@@ -16,7 +16,7 @@ export const GoogleLogin: React.FC = () => {
 
   useEffect(() => {
     /* global google */
-    const handleCredentialResponse = (response: any) => {
+    const handleCredentialResponse = (response: google.accounts.id.CredentialResponse) => {
       try {
         // Decodifica sicura del token JWT (gestisce accenti e caratteri speciali)
         const base64Url = response.credential.split('.')[1];
