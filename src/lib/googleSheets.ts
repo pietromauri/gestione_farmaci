@@ -71,7 +71,7 @@ export const fetchDatabase = async () => {
         return med;
       });
     }
-    
+
     return data;
   } catch (error) {
     console.error("Errore nel recupero del database:", error);
