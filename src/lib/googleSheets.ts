@@ -94,9 +94,10 @@ export const fetchDatabase = async () => {
     // Pre-parsing dei giorni della settimana per ottimizzazione performance
     if (data.medicinals) {
       data.medicinals = data.medicinals.map(med => {
-        if (med.frequenza === 'WEEKLY' && med.giorni_settimana) {
-          const daysStr = String(med.giorni_settimana);
-          const parsed = daysStr.split(',').map(d => parseInt(d.trim())).filter(d => !isNaN(d));
+        if (med.frequenza === 'WEEKLY' && med.giorni_settimana !== undefined && med.giorni_settimana !== '') {
+          // Gestiamo il caso in cui Google Sheets trasforma "6,7" in 6.7 a causa del locale italiano
+          const daysStr = String(med.giorni_settimana).replace(/\./g, ',');
+          const parsed = daysStr.split(',').map(d => parseInt(d.trim(), 10)).filter(d => !isNaN(d));
           return { ...med, parsed_giorni_settimana: parsed };
         }
         return med;

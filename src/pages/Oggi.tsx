@@ -75,9 +75,9 @@ export default function Oggi() {
           } else if (frequency === 'WEEKLY') {
             if (med.parsed_giorni_settimana && Array.isArray(med.parsed_giorni_settimana)) {
               shouldShow = med.parsed_giorni_settimana.includes(adjustedDayOfWeek);
-            } else if (med.giorni_settimana) {
-              // Robust parsing: rimuove tutto ciò che non è numero o virgola, poi splitta e pulisce
-              const daysStr = String(med.giorni_settimana).replace(/[^\d,]/g, '');
+            } else if (med.giorni_settimana !== undefined && med.giorni_settimana !== '') {
+              // Robust parsing: convert 6.7 to 6,7 then remove non-digits/commas
+              const daysStr = String(med.giorni_settimana).replace(/\./g, ',').replace(/[^\d,]/g, '');
               const allowedDays = daysStr.split(',').map(d => parseInt(d, 10)).filter(d => !isNaN(d));
               shouldShow = allowedDays.includes(adjustedDayOfWeek);
             }
