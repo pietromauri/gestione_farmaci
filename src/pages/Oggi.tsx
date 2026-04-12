@@ -235,9 +235,20 @@ export default function Oggi() {
   const handleAction = (taskId: string, action: 'TAKEN' | 'SKIPPED') => {
     const task = tasks.find(t => t.id === taskId);
     if (task) {
-      setSelectedTask(task);
-      setPendingAction(action);
-      setIsNoteDialogOpen(true);
+      // Registra immediatamente senza chiedere note
+      if (task.type === 'MEDICATION') {
+        logMedication({
+          name: task.title,
+          dosage: task.subtitle || '',
+          time: task.time,
+          status: action === 'TAKEN' ? 'taken' : 'missed',
+          date: format(new Date(), 'yyyy-MM-dd')
+        });
+      }
+
+      setTasks(prev => prev.map(t => 
+        t.id === taskId ? { ...t, status: action } : t
+      ));
     }
   };
 
