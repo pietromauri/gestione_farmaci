@@ -1,7 +1,11 @@
 // src/lib/googleSheets.ts
 // Servizio per la persistenza dei dati su Google Sheets
 
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxodh2BvY4QSlRtRRuKEw8y3nTSKi8v_WLuh-IcCyGDbt5kYhg1Xr30DaDS1jSQ8rfVTQ/exec'; 
+const SCRIPT_URL = import.meta.env.VITE_SCRIPT_URL || '';
+
+if (!SCRIPT_URL) {
+  console.warn("VITE_SCRIPT_URL non configurato negli environment variables.");
+}
 
 export interface MedicationData {
   id: string;
@@ -14,18 +18,43 @@ export interface MedicationData {
   orario_2?: string;
   frequenza?: 'DAILY' | 'ALTERNATE' | 'MONTHLY' | 'WEEKLY';
   giorni_settimana?: string; // Es: "1,2,3,4,5"
+  parsed_giorni_settimana?: number[];
   ultima_assunzione?: string;
 }
 
 export const fetchDatabase = async () => {
-  if (SCRIPT_URL.includes('XXXXXXXXX')) return null;
+  if (!SCRIPT_URL || SCRIPT_URL.includes('XXXXXXXXX')) return null;
   try {
     // Aggiungiamo un timestamp per forzare Google a darci i dati freschi (evita cache)
     const urlWithCacheBuster = `${SCRIPT_URL}?t=${Date.now()}`;
     const response = await fetch(urlWithCacheBuster);
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-    const data = await response.json();
-    return data as { medicinals: MedicationData[], logs: any[] };
+    const data = await response.json() as { medicinals: MedicationData[], logs: any[] };
+    
+    // Fix shifted columns: if 'giorni_settimana' is empty but 'ultima_assunzione' contains a comma-separated list of numbers
+    if (data.medicinals) {
+      data.medicinals = data.medicinals.map((med) => {
+        if (!med.giorni_settimana && med.ultima_assunzione && /^(\d+,)*\d+$/.test(med.ultima_assunzione)) {
+          med.giorni_settimana = med.ultima_assunzione;
+          med.ultima_assunzione = '';
+        }
+        return med;
+      });
+    }
+
+    // Pre-parsing dei giorni della settimana per ottimizzazione performance
+    if (data.medicinals) {
+      data.medicinals = data.medicinals.map(med => {
+        if (med.frequenza === 'WEEKLY' && med.giorni_settimana) {
+          const daysStr = String(med.giorni_settimana);
+          const parsed = daysStr.split(',').map(d => parseInt(d.trim())).filter(d => !isNaN(d));
+          return { ...med, parsed_giorni_settimana: parsed };
+        }
+        return med;
+      });
+    }
+    
+    return data;
   } catch (error) {
     console.error("Errore nel recupero del database:", error);
     return null;
@@ -33,7 +62,7 @@ export const fetchDatabase = async () => {
 };
 
 export const addMedication = async (med: MedicationData) => {
-  if (SCRIPT_URL.includes('XXXXXXXXX')) return false;
+  if (!SCRIPT_URL || SCRIPT_URL.includes('XXXXXXXXX')) return false;
   try {
     await fetch(SCRIPT_URL, {
       method: 'POST',
@@ -41,7 +70,20 @@ export const addMedication = async (med: MedicationData) => {
       cache: 'no-cache',
       headers: { 'Content-Type': 'application/json' },
       redirect: 'follow',
-      body: JSON.stringify({ ...med, type: 'MEDICINAL' }),
+      body: JSON.stringify({
+        type: 'MEDICINAL',
+        ID: med.id,
+        Nome: med.nome,
+        Dosaggio: med.dosaggio,
+        Forma: med.forma,
+        'Stock Attuale': med.stock_attuale,
+        Soglia: med.soglia,
+        'Orario 1': med.orario_1 || '',
+        'Orario 2': med.orario_2 || '',
+        Frequenza: med.frequenza || '',
+        'Ultima Assunzione': med.ultima_assunzione || '',
+        giorni_settimana: med.giorni_settimana || ''
+      }),
     });
     return true;
   } catch (error) {
@@ -51,30 +93,28 @@ export const addMedication = async (med: MedicationData) => {
 };
 
 export const updateMedication = async (med: MedicationData) => {
-  if (SCRIPT_URL.includes('XXXXXXXXX')) return false;
+  if (!SCRIPT_URL || SCRIPT_URL.includes('XXXXXXXXX')) return false;
   try {
-    const payload = {
-      type: 'UPDATE_MEDICINAL',
-      id: med.id,
-      nome: med.nome,
-      dosaggio: med.dosaggio,
-      forma: med.forma,
-      stock_attuale: med.stock_attuale,
-      soglia: med.soglia,
-      orario_1: med.orario_1 || '',
-      orario_2: med.orario_2 || '',
-      frequenza: med.frequenza || 'DAILY',
-      ultima_assunzione: med.ultima_assunzione || '',
-      giorni_settimana: med.giorni_settimana || ''
-    };
-
     await fetch(SCRIPT_URL, {
       method: 'POST',
       mode: 'no-cors',
       cache: 'no-cache',
       headers: { 'Content-Type': 'application/json' },
       redirect: 'follow',
-      body: JSON.stringify(payload),
+      body: JSON.stringify({
+        type: 'MEDICINAL_UPDATE',
+        ID: med.id,
+        Nome: med.nome,
+        Dosaggio: med.dosaggio,
+        Forma: med.forma,
+        'Stock Attuale': med.stock_attuale,
+        Soglia: med.soglia,
+        'Orario 1': med.orario_1 || '',
+        'Orario 2': med.orario_2 || '',
+        Frequenza: med.frequenza || '',
+        'Ultima Assunzione': med.ultima_assunzione || '',
+        giorni_settimana: med.giorni_settimana || ''
+      }),
     });
     return true;
   } catch (error) {
@@ -93,7 +133,7 @@ export interface MedicationLog {
 }
 
 export const logMedication = async (log: MedicationLog) => {
-  if (SCRIPT_URL.includes('XXXXXXXXX')) {
+  if (!SCRIPT_URL || SCRIPT_URL.includes('XXXXXXXXX')) {
     console.warn("Google Sheets URL non configurato.");
     return false;
   }

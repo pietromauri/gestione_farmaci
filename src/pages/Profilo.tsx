@@ -76,7 +76,7 @@ export default function Profilo() {
 
   const toggleDay = (day: number) => {
     if (!editingMed) return;
-    const currentDays = editingMed.giorni_settimana ? String(editingMed.giorni_settimana).split(',').map(Number) : [];
+    const currentDays = editingMed.giorni_settimana ? String(editingMed.giorni_settimana).split(',').map(Number).filter(Boolean) : [];
     const newDays = currentDays.includes(day)
       ? currentDays.filter(d => d !== day)
       : [...currentDays, day].sort();
