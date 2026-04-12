@@ -73,7 +73,9 @@ export default function Oggi() {
             shouldShow = dayOfMonth === 1;
           } else if (med.frequenza === 'WEEKLY') {
             if (med.giorni_settimana) {
-              const allowedDays = med.giorni_settimana.split(',').map(d => parseInt(d.trim()));
+              // FIX: Forza a stringa per evitare crash se è un numero (es. "1")
+              const daysStr = String(med.giorni_settimana);
+              const allowedDays = daysStr.split(',').map(d => parseInt(d.trim()));
               shouldShow = allowedDays.includes(adjustedDayOfWeek);
             } else {
               shouldShow = false;

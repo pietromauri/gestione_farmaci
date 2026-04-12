@@ -18,7 +18,8 @@ export async function requestNotificationPermission(): Promise<NotificationPermi
 export async function registerServiceWorker() {
   if ('serviceWorker' in navigator) {
     try {
-      const registration = await navigator.serviceWorker.register('/sw.js');
+      // Usiamo ./sw.js invece di /sw.js per supportare GitHub Pages (percorso relativo)
+      const registration = await navigator.serviceWorker.register('./sw.js');
       console.log('Service Worker registrato con successo:', registration.scope);
       return registration;
     } catch (error) {
@@ -29,8 +30,7 @@ export async function registerServiceWorker() {
   return null;
 }
 
-// Memorizziamo gli ID delle notifiche inviate per non ripeterle
-const sentNotifications = new Set<string>();
+// ... (resto del codice)
 
 /**
  * Controlla se è ora di prendere un medicinale (integrato con logica Eutirox)
@@ -45,7 +45,7 @@ export async function checkAndFireNotifications(meds: MedicationData[]) {
   const currentHour = now.getHours().toString().padStart(2, '0');
   const currentMinute = now.getMinutes().toString().padStart(2, '0');
   const currentTimeStr = `${currentHour}:${currentMinute}`;
-  
+
   const dayOfWeek = now.getDay();
   const adjustedDayOfWeek = dayOfWeek === 0 ? 7 : dayOfWeek;
   const dateStr = now.toDateString();
@@ -54,12 +54,16 @@ export async function checkAndFireNotifications(meds: MedicationData[]) {
     // Logica di filtraggio per frequenza (Eutirox logic)
     let shouldNotify = true;
     if (med.frequenza === 'WEEKLY' && med.giorni_settimana) {
-      const allowedDays = med.giorni_settimana.split(',').map(d => parseInt(d.trim()));
+      // FIX: Forza giorni_settimana a stringa per evitare crash se è un numero singolo da Google Sheets
+      const daysStr = String(med.giorni_settimana);
+      const allowedDays = daysStr.split(',').map(d => parseInt(d.trim()));
       shouldNotify = allowedDays.includes(adjustedDayOfWeek);
     } else if (med.frequenza === 'ALTERNATE') {
       shouldNotify = now.getDate() % 2 === 0;
     } else if (med.frequenza === 'MONTHLY') {
       shouldNotify = now.getDate() === 1;
+    }
+
     }
 
     if (!shouldNotify) return;
