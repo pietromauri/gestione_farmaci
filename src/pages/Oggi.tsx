@@ -71,13 +71,13 @@ export default function Oggi() {
             shouldShow = dayOfMonth % 2 === 0;
           } else if (med.frequenza === 'MONTHLY') {
             shouldShow = dayOfMonth === 1;
-          } else if (med.frequenza === 'WEEKLY') {
+          if (med.frequenza === 'WEEKLY') {
             if (med.parsed_giorni_settimana) {
               shouldShow = med.parsed_giorni_settimana.includes(adjustedDayOfWeek);
             } else if (med.giorni_settimana) {
-              // FIX: Forza a stringa per evitare crash se è un numero (es. "1")
-              const daysStr = String(med.giorni_settimana);
-              const allowedDays = daysStr.split(',').map(d => parseInt(d.trim()));
+              // Robust parsing: rimuove tutto ciò che non è numero o virgola, poi splitta e pulisce
+              const daysStr = String(med.giorni_settimana).replace(/[^\d,]/g, '');
+              const allowedDays = daysStr.split(',').map(d => parseInt(d, 10)).filter(d => !isNaN(d));
               shouldShow = allowedDays.includes(adjustedDayOfWeek);
             } else {
               shouldShow = false;
