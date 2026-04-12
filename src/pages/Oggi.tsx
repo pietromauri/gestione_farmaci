@@ -88,13 +88,22 @@ export default function Oggi() {
             // Funzione per determinare lo stato iniziale basandosi sui log
             const getInitialStatus = (time: string) => {
               if (!db.logs) return 'PENDING';
-              const logEntry = db.logs.find(l => 
-                (l.Nome === med.nome || l.name === med.nome) && 
-                l.Orario === time && 
-                (l.Data === todayStr || (l.date && l.date.includes(todayStr)))
-              );
+              const logEntry = db.logs.find(l => {
+                const logName = l.Nome || l.name;
+                const logTime = l.Orario || l.time;
+                const logDate = l.Data || l.date;
+                const logStatus = l.Stato || l.status;
+
+                return (
+                  logName === med.nome && 
+                  logTime === time && 
+                  (String(logDate).includes(todayStr))
+                );
+              });
+
               if (logEntry) {
-                return logEntry.Stato === 'taken' || logEntry.status === 'taken' ? 'TAKEN' : 'SKIPPED';
+                const status = logEntry.Stato || logEntry.status;
+                return status === 'taken' || status === 'TAKEN' ? 'TAKEN' : 'SKIPPED';
               }
               return 'PENDING';
             };
