@@ -9,7 +9,7 @@ export function useNotificationManager() {
     typeof Notification !== 'undefined' ? Notification.permission : 'denied'
   );
   const [meds, setMeds] = useState<MedicationData[]>([]);
-  const intervalRef = useRef<any>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Initialize service worker and check permission
   useEffect(() => {
