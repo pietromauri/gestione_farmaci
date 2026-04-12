@@ -98,7 +98,8 @@ export const fetchDatabase = async () => {
           // Gestiamo il caso in cui Google Sheets trasforma "6,7" in 6.7 a causa del locale italiano
           const daysStr = String(med.giorni_settimana).replace(/\./g, ',');
           const parsed = daysStr.split(',').map(d => parseInt(d.trim(), 10)).filter(d => !isNaN(d));
-          return { ...med, parsed_giorni_settimana: parsed };
+          // Restituiamo sia l'array parsato per Oggi.tsx che la stringa corretta (con le virgole) per la UI delle impostazioni
+          return { ...med, giorni_settimana: parsed.join(','), parsed_giorni_settimana: parsed };
         }
         return med;
       });
