@@ -30,6 +30,8 @@ export async function registerServiceWorker() {
   return null;
 }
 
+const sentNotifications = new Set<string>();
+
 // ... (resto del codice)
 
 /**
