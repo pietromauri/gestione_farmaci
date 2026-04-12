@@ -64,8 +64,6 @@ export async function checkAndFireNotifications(meds: MedicationData[]) {
       shouldNotify = now.getDate() === 1;
     }
 
-    }
-
     if (!shouldNotify) return;
 
     // Controlla orario_1
