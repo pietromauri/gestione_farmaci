@@ -17,6 +17,24 @@ export interface MedicationData {
   ultima_assunzione?: string;
 }
 
+
+export interface DatabaseLog {
+  Nome?: string;
+  name?: string;
+  Data?: string;
+  date?: string;
+  Timestamp?: string;
+  timestamp?: string;
+  Orario?: string;
+  time?: string;
+  Stato?: string;
+  status?: string;
+  Dosaggio?: string;
+  dosage?: string;
+  Email?: string;
+  userEmail?: string;
+}
+
 export const fetchDatabase = async () => {
   if (SCRIPT_URL.includes('XXXXXXXXX')) return null;
   try {
@@ -25,7 +43,7 @@ export const fetchDatabase = async () => {
     const response = await fetch(urlWithCacheBuster);
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
     const data = await response.json();
-    return data as { medicinals: MedicationData[], logs: any[] };
+    return data as { medicinals: MedicationData[], logs: DatabaseLog[] };
   } catch (error) {
     console.error("Errore nel recupero del database:", error);
     return null;

@@ -35,6 +35,8 @@ export async function registerServiceWorker() {
 /**
  * Controlla se è ora di prendere un medicinale (integrato con logica Eutirox)
  */
+const sentNotifications = new Set<string>();
+
 export async function checkAndFireNotifications(meds: MedicationData[]) {
   if (Notification.permission !== 'granted') return;
 
