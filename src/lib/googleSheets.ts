@@ -26,18 +26,24 @@ export interface MedicationData {
 export interface DatabaseLog {
   Nome?: string;
   name?: string;
+  nome?: string;
   Data?: string;
   date?: string;
+  data?: string;
   Timestamp?: string;
   timestamp?: string;
   Orario?: string;
   time?: string;
+  orario?: string;
   Stato?: string;
   status?: string;
+  stato?: string;
   Dosaggio?: string;
   dosage?: string;
+  dosaggio?: string;
   Email?: string;
   userEmail?: string;
+  email?: string;
 }
 
 export const fetchDatabase = async () => {

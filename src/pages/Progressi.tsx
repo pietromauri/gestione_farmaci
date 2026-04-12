@@ -25,7 +25,7 @@ export default function Progressi() {
       const db = await fetchDatabase();
       if (db && db.logs && db.logs.length > 0) {
         const total = db.logs.length;
-        const taken = db.logs.filter((l: DatabaseLog) => l.status === 'taken').length;
+        const taken = db.logs.filter((l: DatabaseLog) => (l.status || l.stato) === 'taken').length;
         const adherence = Math.round((taken / total) * 100);
         
         setStats({

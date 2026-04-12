@@ -38,7 +38,7 @@ export default function Diario() {
                 if (!log) return false;
                 // Gestisce sia date ISO che date semplici yyyy-MM-dd
                 // Priorità alla colonna 'Data' o 'date', altrimenti usa 'Timestamp' o 'timestamp'
-                const rawDate = log.Data || log.date || log.Timestamp || log.timestamp;
+                const rawDate = log.data || log.Data || log.date || log.Timestamp || log.timestamp;
                 if (!rawDate) return false;
                 
                 const logDate = typeof rawDate === 'string' && rawDate.includes('-') 
@@ -63,8 +63,8 @@ export default function Diario() {
                     <p className="text-xs text-slate-300 italic px-2">Nessuna attività registrata.</p>
                   ) : (
                     dayLogs.map((log, i) => {
-                      const time = log.Orario || log.time || (log.timestamp ? format(new Date(log.timestamp), 'HH:mm') : '--:--');
-                      const status = log.Stato || log.status;
+                      const time = log.orario || log.Orario || log.time || (log.timestamp ? format(new Date(log.timestamp), 'HH:mm') : '--:--');
+                      const status = log.stato || log.Stato || log.status;
                       const isTaken = status === 'taken' || status === 'TAKEN';
                       
                       return (
@@ -75,7 +75,7 @@ export default function Diario() {
                                 <Pill className={`h-5 w-5 ${isTaken ? 'text-green-600' : 'text-red-600'}`} />
                               </div>
                               <div>
-                                <h3 className="font-bold text-slate-900">{log.Nome || log.name || 'Senza nome'}</h3>
+                                <h3 className="font-bold text-slate-900">{log.nome || log.Nome || log.name || 'Senza nome'}</h3>
                                 <p className="text-xs text-slate-500">
                                   {isTaken ? 'Preso' : 'Saltato'} alle {time}
                                 </p>
