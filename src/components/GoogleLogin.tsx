@@ -35,7 +35,6 @@ export const GoogleLogin: React.FC = () => {
         
         setUser(profile);
         localStorage.setItem('user_profile', JSON.stringify(profile));
-        localStorage.setItem('google_token', response.credential);
         window.location.reload();
       } catch (error) {
         console.error("Errore durante la decodifica del login Google:", error);
@@ -67,7 +66,6 @@ export const GoogleLogin: React.FC = () => {
   const logout = () => {
     setUser(null);
     localStorage.removeItem('user_profile');
-    localStorage.removeItem('google_token');
     window.location.reload();
   };
 
