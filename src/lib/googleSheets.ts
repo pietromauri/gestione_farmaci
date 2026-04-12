@@ -50,6 +50,39 @@ export const addMedication = async (med: MedicationData) => {
   }
 };
 
+export const updateMedication = async (med: MedicationData) => {
+  if (SCRIPT_URL.includes('XXXXXXXXX')) return false;
+  try {
+    const payload = {
+      type: 'UPDATE_MEDICINAL',
+      id: med.id,
+      nome: med.nome,
+      dosaggio: med.dosaggio,
+      forma: med.forma,
+      stock_attuale: med.stock_attuale,
+      soglia: med.soglia,
+      orario_1: med.orario_1 || '',
+      orario_2: med.orario_2 || '',
+      frequenza: med.frequenza || 'DAILY',
+      ultima_assunzione: med.ultima_assunzione || '',
+      giorni_settimana: med.giorni_settimana || ''
+    };
+
+    await fetch(SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      cache: 'no-cache',
+      headers: { 'Content-Type': 'application/json' },
+      redirect: 'follow',
+      body: JSON.stringify(payload),
+    });
+    return true;
+  } catch (error) {
+    console.error("Errore nell'aggiornamento del medicinale:", error);
+    return false;
+  }
+};
+
 export interface MedicationLog {
   name: string;
   dosage: string;
