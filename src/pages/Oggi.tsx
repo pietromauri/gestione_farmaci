@@ -92,21 +92,49 @@ export default function Oggi() {
               const todayStr = format(today, 'yyyy-MM-dd');
               
               const logEntry = db.logs.find(l => {
-                // Estraiamo i valori puliti gestendo sia chiavi italiane che inglesi
                 const logName = (l.Nome || l.name || '').toString().trim();
-                const logTime = (l.Orario || l.time || '').toString().trim();
+                let logTime = (l.Orario || l.time || '').toString().trim();
                 const logDate = (l.Data || l.date || '').toString();
                 const medNomePulito = (med.nome || '').trim();
 
-                // Confronto flessibile: 
-                // 1. Il nome deve coincidere (senza spazi)
-                // 2. L'orario deve coincidere
-                // 3. La data deve contenere la stringa odierna (es. 2026-04-12)
+                // Normalizza orario se Google Sheets lo restituisce in ISO (1899-12...) o con i secondi (08:00:00)
+                if (logTime.includes('T')) {
+                  try {
+                    const tDate = new Date(logTime);
+                    if (!isNaN(tDate.getTime())) {
+                      logTime = format(tDate, 'HH:mm');
+                    }
+                  } catch(e) {}
+                } else if (logTime.includes(':')) {
+                  // Prendi i primi 'HH:mm' e ingnora i secondi
+                  const parts = logTime.split(':');
+                  if (parts.length >= 2) {
+                    logTime = `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}`;
+                  }
+                }
+
+                // Normalizza data: gestisce stringhe in vari formati o stringhe ISO compensate (es 22:00Z che è 00:00 in Italia)
+                let isDateMatch = false;
+                const todayIt = format(today, 'dd/MM/yyyy');
+                const todayIt2 = format(today, 'd/M/yyyy');
+                
+                if (logDate.includes(todayStr) || logDate.includes(todayIt) || logDate.includes(todayIt2)) {
+                  isDateMatch = true;
+                } else {
+                  try {
+                    const parsed = new Date(logDate);
+                    if (!isNaN(parsed.getTime())) {
+                       isDateMatch = isSameDay(parsed, today); 
+                    }
+                  } catch (e) {}
+                }
+
                 return (
                   logName.toLowerCase() === medNomePulito.toLowerCase() && 
                   logTime === time && 
-                  logDate.includes(todayStr)
+                  isDateMatch
                 );
+
               });
 
               if (logEntry) {
