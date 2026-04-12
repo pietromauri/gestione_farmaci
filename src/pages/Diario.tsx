@@ -3,10 +3,10 @@ import { format, parseISO, subDays, isSameDay } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { Pill, Activity, Smile, Calendar as CalendarIcon, ChevronRight } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-import { fetchDatabase } from '@/lib/googleSheets';
+import { fetchDatabase, DatabaseLog } from '@/lib/googleSheets';
 
 export default function Diario() {
-  const [logs, setLogs] = useState<any[]>([]);
+  const [logs, setLogs] = useState<DatabaseLog[]>([]);
   const [loading, setLoading] = useState(true);
   const days = Array.from({ length: 7 }).map((_, i) => subDays(new Date(), i));
 

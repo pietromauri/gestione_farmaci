@@ -22,6 +22,24 @@ export interface MedicationData {
   ultima_assunzione?: string;
 }
 
+
+export interface DatabaseLog {
+  Nome?: string;
+  name?: string;
+  Data?: string;
+  date?: string;
+  Timestamp?: string;
+  timestamp?: string;
+  Orario?: string;
+  time?: string;
+  Stato?: string;
+  status?: string;
+  Dosaggio?: string;
+  dosage?: string;
+  Email?: string;
+  userEmail?: string;
+}
+
 export const fetchDatabase = async () => {
   if (!SCRIPT_URL || SCRIPT_URL.includes('XXXXXXXXX')) return null;
   try {
@@ -29,7 +47,7 @@ export const fetchDatabase = async () => {
     const urlWithCacheBuster = `${SCRIPT_URL}?t=${Date.now()}`;
     const response = await fetch(urlWithCacheBuster);
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-    const data = await response.json() as { medicinals: MedicationData[], logs: any[] };
+    const data = await response.json() as { medicinals: MedicationData[], logs: DatabaseLog[] };
     
     // Fix shifted columns: if 'giorni_settimana' is empty but 'ultima_assunzione' contains a comma-separated list of numbers
     if (data.medicinals) {

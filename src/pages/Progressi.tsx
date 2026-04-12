@@ -9,7 +9,7 @@ import {
 import { FileText, Download, TrendingUp, Award, Activity } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { fetchDatabase } from '@/lib/googleSheets';
+import { fetchDatabase, DatabaseLog } from '@/lib/googleSheets';
 
 export default function Progressi() {
   const [stats, setStats] = useState({
@@ -25,7 +25,7 @@ export default function Progressi() {
       const db = await fetchDatabase();
       if (db && db.logs && db.logs.length > 0) {
         const total = db.logs.length;
-        const taken = db.logs.filter((l: any) => l.status === 'taken').length;
+        const taken = db.logs.filter((l: DatabaseLog) => l.status === 'taken').length;
         const adherence = Math.round((taken / total) * 100);
         
         setStats({
