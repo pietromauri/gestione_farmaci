@@ -53,11 +53,17 @@ export async function checkAndFireNotifications(meds: MedicationData[]) {
   meds.forEach(med => {
     // Logica di filtraggio per frequenza (Eutirox logic)
     let shouldNotify = true;
-    if (med.frequenza === 'WEEKLY' && med.giorni_settimana) {
-      // FIX: Forza giorni_settimana a stringa per evitare crash se è un numero singolo da Google Sheets
-      const daysStr = String(med.giorni_settimana);
-      const allowedDays = daysStr.split(',').map(d => parseInt(d.trim()));
-      shouldNotify = allowedDays.includes(adjustedDayOfWeek);
+    if (med.frequenza === 'WEEKLY') {
+      if (med.parsed_giorni_settimana) {
+        shouldNotify = med.parsed_giorni_settimana.includes(adjustedDayOfWeek);
+      } else if (med.giorni_settimana) {
+        // Fallback per robustezza
+        const daysStr = String(med.giorni_settimana);
+        const allowedDays = daysStr.split(',').map(d => parseInt(d.trim()));
+        shouldNotify = allowedDays.includes(adjustedDayOfWeek);
+      } else {
+        shouldNotify = false;
+      }
     } else if (med.frequenza === 'ALTERNATE') {
       shouldNotify = now.getDate() % 2 === 0;
     } else if (med.frequenza === 'MONTHLY') {

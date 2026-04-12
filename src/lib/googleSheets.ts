@@ -14,6 +14,7 @@ export interface MedicationData {
   orario_2?: string;
   frequenza?: 'DAILY' | 'ALTERNATE' | 'MONTHLY' | 'WEEKLY';
   giorni_settimana?: string; // Es: "1,2,3,4,5"
+  parsed_giorni_settimana?: number[];
   ultima_assunzione?: string;
 }
 
@@ -24,8 +25,21 @@ export const fetchDatabase = async () => {
     const urlWithCacheBuster = `${SCRIPT_URL}?t=${Date.now()}`;
     const response = await fetch(urlWithCacheBuster);
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-    const data = await response.json();
-    return data as { medicinals: MedicationData[], logs: any[] };
+    const data = await response.json() as { medicinals: MedicationData[], logs: any[] };
+
+    // Pre-parsing dei giorni della settimana per ottimizzazione performance
+    if (data.medicinals) {
+      data.medicinals = data.medicinals.map(med => {
+        if (med.frequenza === 'WEEKLY' && med.giorni_settimana) {
+          const daysStr = String(med.giorni_settimana);
+          const parsed = daysStr.split(',').map(d => parseInt(d.trim())).filter(d => !isNaN(d));
+          return { ...med, parsed_giorni_settimana: parsed };
+        }
+        return med;
+      });
+    }
+
+    return data;
   } catch (error) {
     console.error("Errore nel recupero del database:", error);
     return null;
