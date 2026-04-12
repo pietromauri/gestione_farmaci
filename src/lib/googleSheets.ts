@@ -61,27 +61,39 @@ export interface MedicationLog {
 
 export const logMedication = async (log: MedicationLog) => {
   if (SCRIPT_URL.includes('XXXXXXXXX')) {
-    console.warn("Google Sheets URL non configurato. I dati non verranno salvati esternamente.");
+    console.warn("Google Sheets URL non configurato.");
     return false;
   }
 
-  // Aggiungi l'email dell'utente se loggato
   const profile = localStorage.getItem('user_profile');
+  let email = 'anonymous';
   if (profile) {
     const user = JSON.parse(profile);
-    log.userEmail = user.email;
+    email = user.email || 'anonymous';
   }
 
   try {
+    // Mappatura esplicita per il foglio LOGS (Immagine 1)
+    // Ordine previsto: Timestamp (auto), Nome, Dosaggio, Orario, Stato, Data, Email
+    const payload = {
+      type: 'LOG',
+      Nome: log.name,
+      Dosaggio: log.dosage,
+      Orario: log.time,
+      Stato: log.status,
+      Data: log.date,
+      Email: email
+    };
+
     await fetch(SCRIPT_URL, {
       method: 'POST',
-      mode: 'no-cors', // Importante per bypassare i problemi di CORS con Apps Script
+      mode: 'no-cors',
       cache: 'no-cache',
       headers: {
         'Content-Type': 'application/json',
       },
       redirect: 'follow',
-      body: JSON.stringify(log),
+      body: JSON.stringify(payload),
     });
     return true;
   } catch (error) {

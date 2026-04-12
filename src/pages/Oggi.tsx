@@ -62,18 +62,40 @@ export default function Oggi() {
           // Convertiamo 0 (Dom) in 7 per nostra convenienza se vogliamo Lun=1
           const adjustedDayOfWeek = dayOfWeek === 0 ? 7 : dayOfWeek;
 
-          let shouldShow = true;
+          let shouldShow = false;
 
-          if (med.frequenza === 'ALTERNATE') {
+          if (!med.frequenza || med.frequenza === 'DAILY') {
+            shouldShow = true;
+          } else if (med.frequenza === 'ALTERNATE') {
             shouldShow = dayOfMonth % 2 === 0;
           } else if (med.frequenza === 'MONTHLY') {
             shouldShow = dayOfMonth === 1;
-          } else if (med.frequenza === 'WEEKLY' && med.giorni_settimana) {
-            const allowedDays = med.giorni_settimana.split(',').map(d => parseInt(d.trim()));
-            shouldShow = allowedDays.includes(adjustedDayOfWeek);
+          } else if (med.frequenza === 'WEEKLY') {
+            if (med.giorni_settimana) {
+              const allowedDays = med.giorni_settimana.split(',').map(d => parseInt(d.trim()));
+              shouldShow = allowedDays.includes(adjustedDayOfWeek);
+            } else {
+              shouldShow = false;
+            }
           }
 
           if (shouldShow) {
+            const todayStr = format(today, 'yyyy-MM-dd');
+            
+            // Funzione per determinare lo stato iniziale basandosi sui log
+            const getInitialStatus = (time: string) => {
+              if (!db.logs) return 'PENDING';
+              const logEntry = db.logs.find(l => 
+                (l.Nome === med.nome || l.name === med.nome) && 
+                l.Orario === time && 
+                (l.Data === todayStr || (l.date && l.date.includes(todayStr)))
+              );
+              if (logEntry) {
+                return logEntry.Stato === 'taken' || logEntry.status === 'taken' ? 'TAKEN' : 'SKIPPED';
+              }
+              return 'PENDING';
+            };
+
             if (med.orario_1) {
               dayTasks.push({
                 id: `task-${med.id}-1`,
@@ -81,7 +103,7 @@ export default function Oggi() {
                 time: med.orario_1,
                 title: med.nome,
                 subtitle: med.dosaggio,
-                status: 'PENDING',
+                status: getInitialStatus(med.orario_1) as any,
                 medication: {
                   id: med.id,
                   userId: currentUserId,
@@ -100,7 +122,7 @@ export default function Oggi() {
                 time: med.orario_2,
                 title: med.nome,
                 subtitle: med.dosaggio,
-                status: 'PENDING',
+                status: getInitialStatus(med.orario_2) as any,
                 medication: {
                   id: med.id,
                   userId: currentUserId,

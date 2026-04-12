@@ -35,10 +35,19 @@ export default function Diario() {
           days.map((day, dayIdx) => {
             const dayLogs = logs.filter(log => {
               try {
+                if (!log) return false;
                 // Gestisce sia date ISO che date semplici yyyy-MM-dd
-                const logDate = log.date ? parseISO(log.date) : new Date(log.timestamp);
-                return isSameDay(logDate, day);
+                // Priorità alla colonna 'Data' o 'date', altrimenti usa 'Timestamp' o 'timestamp'
+                const rawDate = log.Data || log.date || log.Timestamp || log.timestamp;
+                if (!rawDate) return false;
+                
+                const logDate = typeof rawDate === 'string' && rawDate.includes('-') 
+                  ? parseISO(rawDate) 
+                  : new Date(rawDate);
+                  
+                return !isNaN(logDate.getTime()) && isSameDay(logDate, day);
               } catch (e) {
+                console.error("Errore parsing data log:", e, log);
                 return false;
               }
             });
@@ -53,24 +62,30 @@ export default function Diario() {
                   {dayLogs.length === 0 ? (
                     <p className="text-xs text-slate-300 italic px-2">Nessuna attività registrata.</p>
                   ) : (
-                    dayLogs.map((log, i) => (
-                      <Card key={i} className="border-none shadow-sm hover:shadow-md transition-shadow cursor-pointer group">
-                        <CardContent className="p-4 flex items-center justify-between">
-                          <div className="flex items-center space-x-4">
-                            <div className={`p-2 rounded-full ${log.status === 'taken' ? 'bg-green-100' : 'bg-red-100'}`}>
-                              <Pill className={`h-5 w-5 ${log.status === 'taken' ? 'text-green-600' : 'text-red-600'}`} />
+                    dayLogs.map((log, i) => {
+                      const time = log.Orario || log.time || (log.timestamp ? format(new Date(log.timestamp), 'HH:mm') : '--:--');
+                      const status = log.Stato || log.status;
+                      const isTaken = status === 'taken' || status === 'TAKEN';
+                      
+                      return (
+                        <Card key={i} className="border-none shadow-sm hover:shadow-md transition-shadow cursor-pointer group">
+                          <CardContent className="p-4 flex items-center justify-between">
+                            <div className="flex items-center space-x-4">
+                              <div className={`p-2 rounded-full ${isTaken ? 'bg-green-100' : 'bg-red-100'}`}>
+                                <Pill className={`h-5 w-5 ${isTaken ? 'text-green-600' : 'text-red-600'}`} />
+                              </div>
+                              <div>
+                                <h3 className="font-bold text-slate-900">{log.Nome || log.name || 'Senza nome'}</h3>
+                                <p className="text-xs text-slate-500">
+                                  {isTaken ? 'Preso' : 'Saltato'} alle {time}
+                                </p>
+                              </div>
                             </div>
-                            <div>
-                              <h3 className="font-bold text-slate-900">{log.nome || log.name}</h3>
-                              <p className="text-xs text-slate-500">
-                                {log.status === 'taken' ? 'Preso' : 'Saltato'} alle {log.time || format(new Date(log.timestamp), 'HH:mm')}
-                              </p>
-                            </div>
-                          </div>
-                          <ChevronRight className="h-5 w-5 text-slate-300 group-hover:text-blue-500 transition-colors" />
-                        </CardContent>
-                      </Card>
-                    ))
+                            <ChevronRight className="h-5 w-5 text-slate-300 group-hover:text-blue-500 transition-colors" />
+                          </CardContent>
+                        </Card>
+                      );
+                    })
                   )}
                 </div>
               </div>

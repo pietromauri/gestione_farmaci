@@ -52,12 +52,22 @@ export default function AddDataMenu({ isOpen, onClose }: AddDataMenuProps) {
 
   const handleSaveMedication = async () => {
     setIsSaving(true);
-    const success = await addMedication({
+    // Creiamo l'oggetto MedicationData rispettando l'interfaccia e la struttura delle colonne
+    const newMed: any = {
       id: `med-${Date.now()}`,
-      ...medData,
+      nome: medData.nome,
+      dosaggio: medData.dosaggio,
+      forma: medData.forma,
+      stock_attuale: medData.stock_attuale,
       soglia: medData.soglia_rifornimento,
-      giorni_settimana: medData.frequenza === 'WEEKLY' ? selectedDays.join(',') : ''
-    });
+      orario_1: medData.orario_1,
+      orario_2: medData.orario_2,
+      frequenza: medData.frequenza,
+      giorni_settimana: medData.frequenza === 'WEEKLY' ? selectedDays.join(',') : '',
+      ultima_assunzione: ''
+    };
+    
+    const success = await addMedication(newMed);
     setIsSaving(false);
     if (success) {
       setActiveModal('NONE');
