@@ -71,6 +71,8 @@ export default function Oggi() {
             shouldShow = dayOfMonth % 2 === 0;
           } else if (med.frequenza === 'MONTHLY') {
             shouldShow = dayOfMonth === 1;
+          }
+          
           if (med.frequenza === 'WEEKLY') {
             if (med.parsed_giorni_settimana) {
               shouldShow = med.parsed_giorni_settimana.includes(adjustedDayOfWeek);
