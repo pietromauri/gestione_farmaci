@@ -47,8 +47,39 @@ export const fetchDatabase = async () => {
     const urlWithCacheBuster = `${SCRIPT_URL}?t=${Date.now()}`;
     const response = await fetch(urlWithCacheBuster);
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-    const data = await response.json() as { medicinals: MedicationData[], logs: DatabaseLog[] };
+    const rawData = await response.json() as { medicinals: any[], logs: any[] };
     
+    // Normalizzazione chiavi e valori per i medicinali
+    const medicinals = (rawData.medicinals || []).map((item: any) => {
+      const normalized: any = {};
+      Object.keys(item).forEach(key => {
+        // "Orario 1" -> "orario_1", "Nome" -> "nome", "giorni_settimana" -> "giorni_settimana"
+        const normalizedKey = key.toLowerCase().trim().replace(/\s+/g, '_');
+        let value = item[key];
+        if (typeof value === 'string') {
+          value = value.trim();
+        }
+        normalized[normalizedKey] = value;
+      });
+      return normalized as MedicationData;
+    });
+
+    // Normalizzazione chiavi e valori per i log
+    const logs = (rawData.logs || []).map((item: any) => {
+      const normalized: any = {};
+      Object.keys(item).forEach(key => {
+        const normalizedKey = key.toLowerCase().trim().replace(/\s+/g, '_');
+        let value = item[key];
+        if (typeof value === 'string') {
+          value = value.trim();
+        }
+        normalized[normalizedKey] = value;
+      });
+      return normalized as DatabaseLog;
+    });
+
+    let data = { medicinals, logs };
+
     // Fix shifted columns: if 'giorni_settimana' is empty but 'ultima_assunzione' contains a comma-separated list of numbers
     if (data.medicinals) {
       data.medicinals = data.medicinals.map((med) => {

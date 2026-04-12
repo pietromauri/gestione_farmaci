@@ -60,29 +60,26 @@ export default function Oggi() {
           // Filtra per frequenza
           const dayOfMonth = today.getDate();
           const dayOfWeek = today.getDay(); // 0=Sun, 1=Mon...
-          // Convertiamo 0 (Dom) in 7 per nostra convenienza se vogliamo Lun=1
+          // Convertiamo 0 (Dom) in 7 per nostra convenienza se vogliamo Lun=1 (ISO style)
           const adjustedDayOfWeek = dayOfWeek === 0 ? 7 : dayOfWeek;
 
           let shouldShow = false;
+          const frequency = (med.frequenza || 'DAILY').toUpperCase().trim();
 
-          if (!med.frequenza || med.frequenza === 'DAILY') {
+          if (frequency === 'DAILY') {
             shouldShow = true;
-          } else if (med.frequenza === 'ALTERNATE') {
+          } else if (frequency === 'ALTERNATE') {
             shouldShow = dayOfMonth % 2 === 0;
-          } else if (med.frequenza === 'MONTHLY') {
+          } else if (frequency === 'MONTHLY') {
             shouldShow = dayOfMonth === 1;
-          }
-          
-          if (med.frequenza === 'WEEKLY') {
-            if (med.parsed_giorni_settimana) {
+          } else if (frequency === 'WEEKLY') {
+            if (med.parsed_giorni_settimana && Array.isArray(med.parsed_giorni_settimana)) {
               shouldShow = med.parsed_giorni_settimana.includes(adjustedDayOfWeek);
             } else if (med.giorni_settimana) {
               // Robust parsing: rimuove tutto ciò che non è numero o virgola, poi splitta e pulisce
               const daysStr = String(med.giorni_settimana).replace(/[^\d,]/g, '');
               const allowedDays = daysStr.split(',').map(d => parseInt(d, 10)).filter(d => !isNaN(d));
               shouldShow = allowedDays.includes(adjustedDayOfWeek);
-            } else {
-              shouldShow = false;
             }
           }
 
@@ -96,9 +93,10 @@ export default function Oggi() {
               const todayStr = format(today, 'yyyy-MM-dd');
               
               const logEntry = db.logs.find(l => {
-                const logName = (l.Nome || l.name || '').toString().trim();
-                let logTime = (l.Orario || l.time || '').toString().trim();
-                const logDate = (l.Data || l.date || '').toString();
+                // Dopo la normalizzazione in googleSheets.ts, le chiavi sono lowercase
+                const logName = (l.nome || l.Nome || l.name || '').toString().trim();
+                let logTime = (l.orario || l.Orario || l.time || '').toString().trim();
+                const logDate = (l.data || l.Data || l.date || '').toString();
                 const medNomePulito = (med.nome || '').trim();
 
                 // Normalizza orario se Google Sheets lo restituisce in ISO (1899-12...) o con i secondi (08:00:00)
@@ -142,7 +140,7 @@ export default function Oggi() {
               });
 
               if (logEntry) {
-                const status = (logEntry.Stato || logEntry.status || '').toLowerCase();
+                const status = (logEntry.stato || logEntry.Stato || logEntry.status || '').toLowerCase();
                 return status === 'taken' ? 'TAKEN' : 'SKIPPED';
               }
               return 'PENDING';

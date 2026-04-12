@@ -55,21 +55,23 @@ export async function checkAndFireNotifications(meds: MedicationData[]) {
 
   meds.forEach(med => {
     // Logica di filtraggio per frequenza (Eutirox logic)
-    let shouldNotify = true;
-    if (med.frequenza === 'WEEKLY') {
-      if (med.parsed_giorni_settimana) {
+    let shouldNotify = false;
+    const frequency = (med.frequenza || 'DAILY').toUpperCase().trim();
+
+    if (frequency === 'DAILY') {
+      shouldNotify = true;
+    } else if (frequency === 'WEEKLY') {
+      if (med.parsed_giorni_settimana && Array.isArray(med.parsed_giorni_settimana)) {
         shouldNotify = med.parsed_giorni_settimana.includes(adjustedDayOfWeek);
       } else if (med.giorni_settimana) {
         // Fallback per robustezza: Forza giorni_settimana a stringa per evitare crash
-        const daysStr = String(med.giorni_settimana || '');
+        const daysStr = String(med.giorni_settimana || '').replace(/[^\d,]/g, '');
         const allowedDays = daysStr.split(',').map(d => parseInt(d.trim())).filter(n => !isNaN(n));
         shouldNotify = allowedDays.includes(adjustedDayOfWeek);
-      } else {
-        shouldNotify = false;
       }
-    } else if (med.frequenza === 'ALTERNATE') {
+    } else if (frequency === 'ALTERNATE') {
       shouldNotify = now.getDate() % 2 === 0;
-    } else if (med.frequenza === 'MONTHLY') {
+    } else if (frequency === 'MONTHLY') {
       shouldNotify = now.getDate() === 1;
     }
 
