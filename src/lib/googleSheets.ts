@@ -1,7 +1,11 @@
 // src/lib/googleSheets.ts
 // Servizio per la persistenza dei dati su Google Sheets
 
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxodh2BvY4QSlRtRRuKEw8y3nTSKi8v_WLuh-IcCyGDbt5kYhg1Xr30DaDS1jSQ8rfVTQ/exec'; 
+const SCRIPT_URL = import.meta.env.VITE_SCRIPT_URL || '';
+
+if (!SCRIPT_URL) {
+  console.warn("VITE_SCRIPT_URL non configurato negli environment variables.");
+}
 
 export interface MedicationData {
   id: string;
@@ -18,7 +22,7 @@ export interface MedicationData {
 }
 
 export const fetchDatabase = async () => {
-  if (SCRIPT_URL.includes('XXXXXXXXX')) return null;
+  if (!SCRIPT_URL || SCRIPT_URL.includes('XXXXXXXXX')) return null;
   try {
     // Aggiungiamo un timestamp per forzare Google a darci i dati freschi (evita cache)
     const urlWithCacheBuster = `${SCRIPT_URL}?t=${Date.now()}`;
@@ -33,7 +37,7 @@ export const fetchDatabase = async () => {
 };
 
 export const addMedication = async (med: MedicationData) => {
-  if (SCRIPT_URL.includes('XXXXXXXXX')) return false;
+  if (!SCRIPT_URL || SCRIPT_URL.includes('XXXXXXXXX')) return false;
   try {
     await fetch(SCRIPT_URL, {
       method: 'POST',
@@ -51,7 +55,7 @@ export const addMedication = async (med: MedicationData) => {
 };
 
 export const updateMedication = async (med: MedicationData) => {
-  if (SCRIPT_URL.includes('XXXXXXXXX')) return false;
+  if (!SCRIPT_URL || SCRIPT_URL.includes('XXXXXXXXX')) return false;
   try {
     const payload = {
       type: 'UPDATE_MEDICINAL',
@@ -93,7 +97,7 @@ export interface MedicationLog {
 }
 
 export const logMedication = async (log: MedicationLog) => {
-  if (SCRIPT_URL.includes('XXXXXXXXX')) {
+  if (!SCRIPT_URL || SCRIPT_URL.includes('XXXXXXXXX')) {
     console.warn("Google Sheets URL non configurato.");
     return false;
   }
