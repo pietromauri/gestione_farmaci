@@ -61,9 +61,9 @@ export async function checkAndFireNotifications(meds: MedicationData[]) {
       if (med.parsed_giorni_settimana) {
         shouldNotify = med.parsed_giorni_settimana.includes(adjustedDayOfWeek);
       } else if (med.giorni_settimana) {
-        // Fallback per robustezza
-        const daysStr = String(med.giorni_settimana);
-        const allowedDays = daysStr.split(',').map(d => parseInt(d.trim()));
+        // Fallback per robustezza: Forza giorni_settimana a stringa per evitare crash
+        const daysStr = String(med.giorni_settimana || '');
+        const allowedDays = daysStr.split(',').map(d => parseInt(d.trim())).filter(n => !isNaN(n));
         shouldNotify = allowedDays.includes(adjustedDayOfWeek);
       } else {
         shouldNotify = false;
