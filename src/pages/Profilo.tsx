@@ -133,103 +133,174 @@ export default function Profilo() {
 
       {/* Edit Medication Dialog */}
       <Dialog open={!!editingMed} onOpenChange={(open) => !open && setEditingMed(null)}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Modifica {editingMed?.nome}</DialogTitle>
-          </DialogHeader>
+        <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-surface-container-lowest rounded-t-[2.5rem] sm:rounded-[2.5rem] border-none shadow-[0_-8px_32px_rgba(11,28,48,0.06)] h-[813px] sm:h-auto flex flex-col" showCloseButton={false}>
           {editingMed && (
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="edit-dosage">Dosaggio</Label>
-                <Input 
-                  id="edit-dosage" 
-                  value={editingMed.dosaggio}
-                  onChange={(e) => setEditingMed({ ...editingMed, dosaggio: e.target.value })}
-                />
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="edit-freq">Frequenza</Label>
-                  <Select 
-                    value={editingMed.frequenza} 
-                    onValueChange={(val) => setEditingMed({ ...editingMed, frequenza: val as any })}
-                  >
-                    <SelectTrigger id="edit-freq">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="DAILY">Ogni giorno</SelectItem>
-                      <SelectItem value="WEEKLY">Giorni specifici</SelectItem>
-                      <SelectItem value="ALTERNATE">Giorni alterni</SelectItem>
-                      <SelectItem value="MONTHLY">Una volta al mese</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="edit-stock">Scorta Attuale</Label>
-                  <Input 
-                    id="edit-stock" 
-                    type="number" 
-                    value={editingMed.stock_attuale}
-                    onChange={(e) => setEditingMed({ ...editingMed, stock_attuale: parseInt(e.target.value) || 0 })}
-                  />
-                </div>
-              </div>
+            <>
+              {/* Header */}
+              <header className="flex justify-between items-center px-8 h-20 w-full shrink-0">
+                <DialogTitle className="text-xl font-bold text-primary tracking-tight font-headline">Modifica Farmaco</DialogTitle>
+                <button onClick={() => setEditingMed(null)} className="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container-low text-on-surface-variant hover:bg-surface-variant transition-colors duration-200">
+                  <span className="material-symbols-outlined">close</span>
+                </button>
+              </header>
 
-              {editingMed.frequenza === 'WEEKLY' && (
-                <div className="grid gap-2 border-t pt-4">
-                  <Label>Giorni della settimana</Label>
-                  <div className="flex justify-between gap-1">
-                    {[
-                      { id: 1, label: 'L' }, { id: 2, label: 'M' }, { id: 3, label: 'M' },
-                      { id: 4, label: 'G' }, { id: 5, label: 'V' }, { id: 6, label: 'S' }, { id: 7, label: 'D' },
-                    ].map((day) => {
-                      const isSelected = editingMed.giorni_settimana ? String(editingMed.giorni_settimana).replace(/\./g, ',').split(',').map(Number).includes(day.id) : false;
-                      return (
-                        <button
-                          key={day.id}
-                          onClick={() => toggleDay(day.id)}
-                          className={`h-8 w-8 rounded-full text-[10px] font-bold transition-all ${
-                            isSelected ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
-                          }`}
-                        >
-                          {day.label}
+              {/* Content Area */}
+              <div className="flex-1 overflow-y-auto px-8 pb-32 no-scrollbar">
+                <div className="space-y-8">
+                  {/* Hero Visual / Context */}
+                  <div className="flex items-center gap-6 p-4 rounded-3xl bg-surface-container-low">
+                    <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center text-on-primary">
+                      <span className="material-symbols-outlined text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>pill</span>
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-primary tracking-wider uppercase">Medicinale</p>
+                      <h2 className="text-lg font-bold text-on-surface leading-tight">{editingMed.nome}</h2>
+                    </div>
+                  </div>
+
+                  {/* Dosage & Supply Grid */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="block text-xs font-semibold text-outline px-1">Dosaggio</label>
+                      <div className="relative">
+                        <input
+                          className="w-full h-14 px-4 bg-surface-container-low border-none rounded-2xl text-on-surface font-medium focus:ring-2 focus:ring-primary transition-all"
+                          type="text"
+                          value={editingMed.dosaggio}
+                          onChange={(e) => setEditingMed({ ...editingMed, dosaggio: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="block text-xs font-semibold text-outline px-1">Scorta Attuale</label>
+                      <div className="relative">
+                        <input
+                          className="w-full h-14 px-4 bg-surface-container-low border-none rounded-2xl text-on-surface font-medium focus:ring-2 focus:ring-primary transition-all"
+                          type="number"
+                          value={editingMed.stock_attuale}
+                          onChange={(e) => setEditingMed({ ...editingMed, stock_attuale: parseInt(e.target.value) || 0 })}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Frequency Dropdown */}
+                  <div className="space-y-2">
+                    <label className="block text-xs font-semibold text-outline px-1">Frequenza</label>
+                    <div className="relative group">
+                      <select
+                        className="w-full h-14 px-4 pr-10 bg-surface-container-low border-none rounded-2xl text-on-surface font-medium appearance-none focus:ring-2 focus:ring-primary transition-all"
+                        value={editingMed.frequenza}
+                        onChange={(e) => setEditingMed({ ...editingMed, frequenza: e.target.value as any })}
+                      >
+                        <option value="DAILY">Giornaliero</option>
+                        <option value="WEEKLY">Settimanale</option>
+                        <option value="ALTERNATE">Giorni alterni</option>
+                        <option value="MONTHLY">Una volta al mese</option>
+                        <option value="PRN">Al bisogno</option>
+                      </select>
+                      <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-outline">
+                        <span className="material-symbols-outlined">expand_more</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Week Day Selector */}
+                  {editingMed.frequenza === 'WEEKLY' && (
+                    <div className="space-y-4">
+                      <label className="block text-xs font-semibold text-outline px-1">Giorni della settimana</label>
+                      <div className="flex justify-between items-center">
+                        {[
+                          { id: 1, label: 'L' }, { id: 2, label: 'M' }, { id: 3, label: 'M' },
+                          { id: 4, label: 'G' }, { id: 5, label: 'V' }, { id: 6, label: 'S' }, { id: 7, label: 'D' },
+                        ].map((day) => {
+                          const isSelected = editingMed.giorni_settimana ? String(editingMed.giorni_settimana).replace(/\./g, ',').split(',').map(Number).includes(day.id) : false;
+                          return (
+                            <button
+                              key={day.id}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                toggleDay(day.id);
+                              }}
+                              className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-xs transition-colors ${
+                                isSelected
+                                  ? 'bg-primary text-on-primary shadow-lg shadow-primary/20'
+                                  : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-variant'
+                              }`}
+                              type="button"
+                            >
+                              {day.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Time Pickers */}
+                  <div className="space-y-4 pt-4">
+                    <label className="block text-xs font-semibold text-outline px-1">Orari di assunzione</label>
+                    <div className="space-y-3">
+                      {/* Time Row 1 */}
+                      <div className="flex items-center gap-4 bg-surface-container-low p-4 rounded-3xl group hover:bg-surface-container transition-colors">
+                        <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-primary">
+                          <span className="material-symbols-outlined text-xl">schedule</span>
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-[10px] uppercase tracking-wider font-bold text-outline">Orario 1</p>
+                          <input
+                            className="bg-transparent border-none p-0 text-on-surface font-bold text-lg focus:ring-0 w-full"
+                            type="time"
+                            value={editingMed.orario_1}
+                            onChange={(e) => setEditingMed({ ...editingMed, orario_1: e.target.value })}
+                          />
+                        </div>
+                        <button className="text-tertiary opacity-0 group-hover:opacity-100 transition-opacity" type="button" onClick={() => setEditingMed({ ...editingMed, orario_1: '' })}>
+                          <span className="material-symbols-outlined">delete</span>
                         </button>
-                      );
-                    })}
+                      </div>
+
+                      {/* Time Row 2 */}
+                      <div className="flex items-center gap-4 bg-surface-container-low p-4 rounded-3xl group hover:bg-surface-container transition-colors">
+                        <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-primary">
+                          <span className="material-symbols-outlined text-xl">schedule</span>
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-[10px] uppercase tracking-wider font-bold text-outline">Orario 2</p>
+                          <input
+                            className="bg-transparent border-none p-0 text-on-surface font-bold text-lg focus:ring-0 w-full"
+                            type="time"
+                            value={editingMed.orario_2 || ''}
+                            onChange={(e) => setEditingMed({ ...editingMed, orario_2: e.target.value })}
+                          />
+                        </div>
+                        <button className="text-tertiary opacity-0 group-hover:opacity-100 transition-opacity" type="button" onClick={() => setEditingMed({ ...editingMed, orario_2: '' })}>
+                          <span className="material-symbols-outlined">delete</span>
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              )}
-
-              <div className="grid grid-cols-2 gap-4 border-t pt-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="edit-time1">Orario 1</Label>
-                  <Input 
-                    id="edit-time1" 
-                    type="time" 
-                    value={editingMed.orario_1}
-                    onChange={(e) => setEditingMed({ ...editingMed, orario_1: e.target.value })}
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="edit-time2">Orario 2</Label>
-                  <Input 
-                    id="edit-time2" 
-                    type="time" 
-                    value={editingMed.orario_2}
-                    onChange={(e) => setEditingMed({ ...editingMed, orario_2: e.target.value })}
-                  />
-                </div>
               </div>
-            </div>
+
+              {/* Sticky Footer Actions */}
+              <footer className="p-6 bg-white/80 backdrop-blur-xl border-t border-outline-variant/10 flex flex-col gap-3 fixed bottom-0 left-0 right-0 sm:absolute shadow-[0_-12px_40px_rgba(0,0,0,0.03)]">
+                <button
+                  onClick={handleSaveEdit}
+                  disabled={isSaving}
+                  className="w-full h-14 rounded-2xl bg-gradient-to-r from-primary to-primary-container text-on-primary font-bold shadow-xl shadow-primary/20 hover:scale-[0.98] transition-transform flex items-center justify-center"
+                >
+                  {isSaving ? 'Salvataggio...' : 'Salva Modifiche'}
+                </button>
+                <button
+                  onClick={() => setEditingMed(null)}
+                  className="w-full h-14 rounded-2xl bg-surface-container-highest text-primary font-bold hover:bg-surface-variant transition-colors flex items-center justify-center"
+                >
+                  Annulla
+                </button>
+              </footer>
+            </>
           )}
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setEditingMed(null)}>Annulla</Button>
-            <Button disabled={isSaving} onClick={handleSaveEdit} className="bg-blue-600 hover:bg-blue-700">
-              {isSaving ? 'Salvataggio...' : 'Salva Modifiche'}
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
 
