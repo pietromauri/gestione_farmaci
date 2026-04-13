@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 
-const CLIENT_ID = '777697781094-gtnlj70sv8vdbi1rhj63md01evocivkl.apps.googleusercontent.com';
+const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
 export interface UserProfile {
   name: string;
@@ -44,6 +44,10 @@ export const GoogleLogin: React.FC = () => {
     };
 
     const initializeGoogle = () => {
+      if (!CLIENT_ID) {
+        console.error('Google Client ID is missing. Please set VITE_GOOGLE_CLIENT_ID in your environment variables.');
+        return;
+      }
       if (typeof google !== 'undefined' && !user) {
         google.accounts.id.initialize({
           client_id: CLIENT_ID,
@@ -85,6 +89,14 @@ export const GoogleLogin: React.FC = () => {
         >
           Disconnetti
         </button>
+      </div>
+    );
+  }
+
+  if (!CLIENT_ID) {
+    return (
+      <div className="w-full p-4 bg-red-50 text-red-600 rounded border border-red-200 text-center text-sm">
+        Autenticazione Google non disponibile: configurazione mancante.
       </div>
     );
   }
