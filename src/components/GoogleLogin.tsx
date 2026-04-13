@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 
-const CLIENT_ID = '777697781094-gtnlj70sv8vdbi1rhj63md01evocivkl.apps.googleusercontent.com';
+const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
 export interface UserProfile {
   name: string;
@@ -43,7 +43,7 @@ export const GoogleLogin: React.FC = () => {
     };
 
     const initializeGoogle = () => {
-      if (typeof google !== 'undefined' && !user) {
+      if (CLIENT_ID && typeof google !== 'undefined' && !user) {
         google.accounts.id.initialize({
           client_id: CLIENT_ID,
           callback: handleCredentialResponse,
@@ -83,6 +83,15 @@ export const GoogleLogin: React.FC = () => {
         >
           Disconnetti
         </button>
+      </div>
+    );
+  }
+
+  if (!CLIENT_ID) {
+    return (
+      <div className="p-4 bg-amber-50 border border-amber-100 rounded-2xl text-center">
+        <p className="text-sm font-semibold text-amber-800">Sincronizzazione non disponibile</p>
+        <p className="text-xs text-amber-600 mt-1">Configura VITE_GOOGLE_CLIENT_ID per attivare il backup.</p>
       </div>
     );
   }
