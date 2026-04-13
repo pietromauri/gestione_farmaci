@@ -6,6 +6,38 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+
+    --color-surface: #f8f9ff;
+    --color-on-surface: #0b1c30;
+    --color-surface-container: #e5eeff;
+    --color-surface-container-low: #eff4ff;
+    --color-surface-container-lowest: #ffffff;
+    --color-surface-container-high: #dce9ff;
+    --color-surface-container-highest: #d3e4fe;
+    --color-on-surface-variant: #434655;
+    --color-outline: #737686;
+    --color-outline-variant: #c3c6d7;
+    --color-primary: #004ac6;
+    --color-on-primary: #ffffff;
+    --color-primary-container: #2563eb;
+    --color-on-primary-container: #eeefff;
+    --color-secondary: #006e2d;
+    --color-on-secondary: #ffffff;
+    --color-secondary-container: #7cf994;
+    --color-on-secondary-container: #007230;
+    --color-tertiary: #ab0b1c;
+    --color-on-tertiary: #ffffff;
+    --color-tertiary-container: #cf2c30;
+    --color-on-tertiary-container: #ffecea;
+    --color-error: #ba1a1a;
+    --color-on-error: #ffffff;
+    --color-error-container: #ffdad6;
+    --color-on-error-container: #93000a;
+
+    --font-headline: 'Inter', sans-serif;
+    --font-body: 'Inter', sans-serif;
+    --font-label: 'Inter', sans-serif;
+
     --font-heading: var(--font-sans);
     --font-sans: 'Geist Variable', sans-serif;
     --color-sidebar-ring: var(--sidebar-ring);
@@ -122,9 +154,30 @@
     @apply border-border outline-ring/50;
     }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-surface text-on-surface;
     }
   html {
-    @apply font-sans;
+    @apply font-body;
     }
+}
+@layer base {
+  .material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    display: inline-block;
+    line-height: 1;
+    vertical-align: middle;
+  }
+  body {
+    font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    @apply bg-surface text-on-surface;
+    min-height: max(884px, 100dvh);
+  }
+  .glass-nav {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+  }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 }
