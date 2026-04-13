@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { format, parseISO, isSameDay, addHours, addDays } from 'date-fns';
 import { it } from 'date-fns/locale';
-import { Check, X, Clock, Pill, Calendar, Activity, MessageSquare, BellRing } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { 
@@ -328,7 +327,7 @@ export default function Oggi() {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
         <div className="flex flex-col items-center space-y-4">
-          <Activity className="h-8 w-8 text-blue-600 animate-pulse" />
+          <span className="material-symbols-outlined text-4xl text-primary animate-pulse" style={{ fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24" }}>healing</span>
           <p className="text-slate-500 font-medium">Caricamento programma...</p>
         </div>
       </div>
@@ -336,91 +335,140 @@ export default function Oggi() {
   }
 
   return (
-    <div className="max-w-md mx-auto pb-8">
-      <header className="p-6 bg-white border-b border-slate-100 sticky top-0 z-10">
-        <h1 className="text-3xl font-bold text-slate-900 capitalize">{todayStr}</h1>
-        <p className="text-slate-500 mt-1">Ecco il tuo programma per oggi</p>
-      </header>
+    <div className="max-w-2xl mx-auto pb-8">
+      <section className="mb-10 px-6 pt-4">
+        <div className="flex flex-col gap-1">
+          <span className="text-sm text-on-surface-variant font-medium tracking-wide uppercase text-[0.6875rem]">{todayStr}</span>
+          <h2 className="text-3xl font-extrabold tracking-tight text-on-surface mb-4">Buongiorno.</h2>
+        </div>
 
-      <div className="p-4 space-y-4">
+        {/* Progress Card */}
+        <div className="bg-gradient-to-br from-primary to-primary-container p-6 rounded-xl text-on-primary shadow-lg shadow-primary/10 relative overflow-hidden">
+          <div className="relative z-10">
+            <p className="text-sm font-medium opacity-90 mb-1">Aderenza alla terapia</p>
+            <div className="flex items-end gap-2 mb-4">
+              <span className="text-4xl font-bold leading-none">{tasks.length > 0 ? Math.round((tasks.filter(t => t.status && t.status !== 'PENDING').length / tasks.length) * 100) : 100}%</span>
+              <span className="text-sm mb-1 opacity-80">completato</span>
+            </div>
+            <div className="w-full bg-white/20 h-2 rounded-full overflow-hidden">
+              <div className="bg-white h-full rounded-full" style={{ width: `${tasks.length > 0 ? Math.round((tasks.filter(t => t.status && t.status !== 'PENDING').length / tasks.length) * 100) : 100}%` }}></div>
+            </div>
+            <p className="text-xs mt-3 opacity-80">
+              {tasks.length - tasks.filter(t => t.status && t.status !== 'PENDING').length === 0
+                ? 'Hai completato tutti i farmaci di oggi.'
+                : `Ti mancano ${tasks.length - tasks.filter(t => t.status && t.status !== 'PENDING').length} farmaci per completare la giornata.`}
+            </p>
+          </div>
+          {/* Decorative element */}
+          <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-white/10 rounded-full blur-2xl"></div>
+        </div>
+      </section>
+
+      <div className="px-6 space-y-10">
         {tasks.length === 0 ? (
           <div className="text-center py-12">
-            <Calendar className="h-12 w-12 text-slate-300 mx-auto mb-4" />
-            <p className="text-slate-500">Nessun impegno per oggi.</p>
+            <span className="material-symbols-outlined text-outline text-5xl mb-4" data-icon="calendar_today">calendar_today</span>
+            <p className="text-on-surface-variant">Nessun impegno per oggi.</p>
           </div>
         ) : (
-          tasks.map((task) => (
-            <Card key={task.id} className={`overflow-hidden border-l-4 ${
-              task.status === 'TAKEN' ? 'border-l-green-500 bg-green-50/30' : 
-              task.status === 'SKIPPED' ? 'border-l-red-500 bg-red-50/30' : 
-              task.originalTime ? 'border-l-amber-500 bg-amber-50/20' :
-              'border-l-blue-500'
-            }`}>
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-start space-x-3">
-                    <div className="mt-1">
-                      {task.type === 'MEDICATION' ? (
-                        <Pill className="h-5 w-5 text-blue-600" />
-                      ) : (
-                        <Calendar className="h-5 w-5 text-purple-600" />
+          ['Mattino', 'Pomeriggio', 'Sera'].map(sectionName => {
+            const sectionTasks = tasks.filter(t => {
+              const hour = parseInt(t.time.split(':')[0]);
+              if (sectionName === 'Mattino') return hour < 12;
+              if (sectionName === 'Pomeriggio') return hour >= 12 && hour < 18;
+              if (sectionName === 'Sera') return hour >= 18;
+              return false;
+            });
+
+            if (sectionTasks.length === 0) return null;
+
+            let icon = 'light_mode';
+            if (sectionName === 'Pomeriggio') icon = 'sunny';
+            if (sectionName === 'Sera') icon = 'bedtime';
+
+            return (
+              <section key={sectionName}>
+                <div className="flex items-center gap-3 mb-6">
+                  <span className="material-symbols-outlined text-primary" data-icon={icon}>{icon}</span>
+                  <h3 className="text-lg font-bold tracking-tight">{sectionName}</h3>
+                  <div className="h-[1px] flex-grow bg-outline-variant opacity-20"></div>
+                </div>
+                <div className="space-y-4">
+                  {sectionTasks.map((task) => (
+                    <div
+                      key={task.id}
+                      className={`bg-surface-container-lowest p-5 rounded-xl flex flex-col md:flex-row md:items-center gap-4 group transition-colors duration-200 border border-transparent hover:border-primary/10 ${task.status === 'TAKEN' ? 'bg-secondary-container/10' : task.status === 'SKIPPED' ? 'bg-error-container/10 shadow-sm opacity-60' : 'shadow-sm'}`}
+                    >
+                      <div className="flex items-center gap-4 w-full">
+                        <div className={`shrink-0 w-12 h-12 rounded-full flex items-center justify-center ${
+                          task.status === 'TAKEN' ? 'bg-secondary-container text-on-secondary-container' :
+                          task.status === 'SKIPPED' ? 'bg-error-container text-on-error-container' :
+                          'bg-surface-container-high text-primary'
+                        }`}>
+                          {task.status === 'TAKEN' ? (
+                            <span className="material-symbols-outlined" data-icon="check_circle" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                          ) : task.status === 'SKIPPED' ? (
+                            <span className="material-symbols-outlined" data-icon="cancel" style={{ fontVariationSettings: "'FILL' 1" }}>cancel</span>
+                          ) : (
+                            <span className="material-symbols-outlined" data-icon={task.type === 'MEDICATION' ? "pill" : "calendar_today"}>{task.type === 'MEDICATION' ? "pill" : "calendar_today"}</span>
+                          )}
+                        </div>
+                        <div className="flex-grow">
+                          <h4 className="text-base font-semibold leading-tight mb-1">{task.title}</h4>
+                          <p className="text-sm text-on-surface-variant font-medium">{task.time} • {task.subtitle}</p>
+                        </div>
+
+                        {task.status && task.status !== 'PENDING' ? (
+                          <div className={`hidden md:block font-semibold text-xs py-1 px-3 rounded-full ${
+                            task.status === 'TAKEN' ? 'text-on-secondary-container bg-secondary-container' : 'text-on-error-container bg-error-container'
+                          }`}>
+                            {task.status === 'TAKEN' ? 'PRESO' : 'SALTATO'}
+                          </div>
+                        ) : (
+                          <div className="hidden md:flex gap-2">
+                             <button onClick={() => handleAction(task.id, 'TAKEN')} className="bg-surface-container-highest text-primary text-xs font-bold py-2 px-4 rounded-full hover:bg-primary hover:text-white transition-all">
+                                SEGNA ASSUNTO
+                             </button>
+                             <button onClick={() => handleAction(task.id, 'SKIPPED')} className="bg-surface-container-highest text-error text-xs font-bold py-2 px-4 rounded-full hover:bg-error hover:text-white transition-all">
+                                SALTA
+                             </button>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Mobile actions */}
+                      {(!task.status || task.status === 'PENDING') && (
+                        <div className="flex md:hidden gap-2 w-full mt-2">
+                          <button onClick={() => handleAction(task.id, 'TAKEN')} className="flex-1 bg-surface-container-highest text-primary text-xs font-bold py-2 px-4 rounded-full hover:bg-primary hover:text-white transition-all text-center">
+                            SEGNA ASSUNTO
+                          </button>
+                          <button onClick={() => handleAction(task.id, 'SKIPPED')} className="flex-1 bg-surface-container-highest text-error text-xs font-bold py-2 px-4 rounded-full hover:bg-error hover:text-white transition-all text-center">
+                            SALTA
+                          </button>
+                        </div>
                       )}
                     </div>
-                    <div>
-                      <div className="flex items-center space-x-2">
-                        <span className="text-sm font-bold text-slate-900">{task.time}</span>
-                        {task.originalTime && (
-                          <span className="text-[10px] text-amber-600 font-medium bg-amber-100 px-1.5 py-0.5 rounded">
-                            Posticipato (era {task.originalTime})
-                          </span>
-                        )}
-                        <span className="text-xs text-slate-400">•</span>
-                        <h3 className="text-base font-semibold text-slate-900">{task.title}</h3>
-                      </div>
-                      <p className="text-sm text-slate-500">{task.subtitle}</p>
-                    </div>
-                  </div>
-                  
-                  {task.status && task.status !== 'PENDING' ? (
-                    <div className={`px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider ${
-                      task.status === 'TAKEN' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                    }`}>
-                      {task.status === 'TAKEN' ? 'Preso' : 'Saltato'}
-                    </div>
-                  ) : null}
+                  ))}
                 </div>
-
-                {task.type === 'MEDICATION' && (!task.status || task.status === 'PENDING') && (
-                  <div className="mt-4 flex flex-col space-y-2">
-                    <div className="flex space-x-2">
-                      <Button 
-                        onClick={() => handleAction(task.id, 'TAKEN')}
-                        className="flex-1 bg-green-600 hover:bg-green-700 text-white h-12 text-lg font-bold rounded-xl"
-                      >
-                        <Check className="mr-2 h-6 w-6" /> Preso
-                      </Button>
-                      <Button 
-                        variant="outline"
-                        onClick={() => handleAction(task.id, 'SKIPPED')}
-                        className="flex-1 border-red-200 text-red-600 hover:bg-red-50 h-12 text-lg font-bold rounded-xl"
-                      >
-                        <X className="mr-2 h-6 w-6" /> Salta
-                      </Button>
-                    </div>
-                    <Button 
-                      variant="ghost"
-                      onClick={() => handleSnoozeClick(task.id)}
-                      className="w-full text-slate-500 hover:text-blue-600 hover:bg-blue-50 h-10 font-semibold rounded-xl"
-                    >
-                      <BellRing className="mr-2 h-4 w-4" /> Posticipa
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          ))
+              </section>
+            );
+          })
         )}
       </div>
+
+      {/* Bento Style Tip Card */}
+      <section className="mt-12 px-6">
+        <div className="bg-surface-container-low p-6 rounded-2xl grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+          <div className="space-y-2">
+            <span className="inline-block px-3 py-1 bg-surface-container-highest text-primary text-[0.6875rem] font-bold rounded-full uppercase tracking-wider">Consiglio medico</span>
+            <h5 className="text-lg font-bold leading-tight">Idratazione costante</h5>
+            <p className="text-sm text-on-surface-variant leading-relaxed">Ricorda di bere almeno un bicchiere d'acqua pieno ad ogni assunzione per facilitare l'assorbimento.</p>
+          </div>
+          <div className="relative h-32 w-full rounded-xl overflow-hidden shadow-inner bg-surface">
+            <img alt="Glass of water" className="w-full h-full object-cover" src="https://images.unsplash.com/photo-1548839140-29a749e1bc4e?q=80&w=600&auto=format&fit=crop" />
+          </div>
+        </div>
+      </section>
 
       {/* Note Dialog */}
       <Dialog open={isNoteDialogOpen} onOpenChange={setIsNoteDialogOpen}>
