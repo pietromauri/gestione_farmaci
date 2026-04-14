@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">HealTrack</string>
+    <string name="title_activity_main">HealTrack</string>
+    <string name="package_name">com.healtrack.app</string>
+    <string name="custom_url_scheme">com.healtrack.app</string>
+</resources>
