@@ -465,7 +465,7 @@ export default function Oggi() {
             <p className="text-sm text-on-surface-variant leading-relaxed">Ricorda di bere almeno un bicchiere d'acqua pieno ad ogni assunzione per facilitare l'assorbimento.</p>
           </div>
           <div className="relative h-32 w-full rounded-xl overflow-hidden shadow-inner bg-surface">
-            <img alt="Glass of water" className="w-full h-full object-cover" src="https://images.unsplash.com/photo-1548839140-29a749e1bc4e?q=80&w=600&auto=format&fit=crop" />
+            <img alt="Glass of water" className="w-full h-full object-cover" src="./water_glass.png" />
           </div>
         </div>
       </section>

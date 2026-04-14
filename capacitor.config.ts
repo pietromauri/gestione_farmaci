@@ -3,7 +3,16 @@ import type { CapacitorConfig } from '@capacitor/cli';
 const config: CapacitorConfig = {
   appId: 'com.healtrack.app',
   appName: 'HealTrack',
-  webDir: 'dist'
+  webDir: 'dist',
+  plugins: {
+    SplashScreen: {
+      launchShowDuration: 2000,
+      launchAutoHide: true,
+      backgroundColor: "#1E293B",
+      androidSplashResourceName: "splash",
+      androidScaleType: "CENTER_CROP"
+    }
+  }
 };
 
 export default config;
