@@ -30,6 +30,7 @@ jobs:
         run: npm run build
         env:
           VITE_SCRIPT_URL: ${{ secrets.VITE_SCRIPT_URL }}
+          VITE_GOOGLE_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID }}
 
       - name: Setup Pages 🛠️
         uses: actions/configure-pages@v4
