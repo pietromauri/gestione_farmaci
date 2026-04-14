@@ -1,9 +1,21 @@
 // src/lib/notifications.ts
 import { MedicationData } from './googleSheets';
+import { Capacitor } from '@capacitor/core';
+import { LocalNotifications } from '@capacitor/local-notifications';
 
 const sentNotifications = new Set<string>();
 
 export async function requestNotificationPermission(): Promise<NotificationPermission> {
+  if (Capacitor.isNativePlatform()) {
+    try {
+      const permStatus = await LocalNotifications.requestPermissions();
+      return permStatus.display === 'granted' ? 'granted' : 'denied';
+    } catch (e) {
+      console.error('Errore Capacitor Notifiche:', e);
+      return 'denied';
+    }
+  }
+
   if (!('Notification' in window)) {
     console.warn('Questo browser non supporta le notifiche desktop');
     return 'denied';
@@ -18,9 +30,10 @@ export async function requestNotificationPermission(): Promise<NotificationPermi
 }
 
 export async function registerServiceWorker() {
+  if (Capacitor.isNativePlatform()) return null; // Non serve service worker nativo
+
   if ('serviceWorker' in navigator) {
     try {
-      // Usiamo ./sw.js invece di /sw.js per supportare GitHub Pages (percorso relativo)
       const registration = await navigator.serviceWorker.register('./sw.js');
       return registration;
     } catch (error) {
@@ -31,18 +44,8 @@ export async function registerServiceWorker() {
   return null;
 }
 
-
-// ... (resto del codice)
-
-/**
- * Controlla se è ora di prendere un medicinale (integrato con logica Eutirox)
- */
-
-export async function checkAndFireNotifications(meds: MedicationData[]) {
-  if (Notification.permission !== 'granted') return;
-
-  const registration = await navigator.serviceWorker.ready;
-  if (!registration) return;
+export async function checkAndFireNotifications(meds: MedicationData[], permission: NotificationPermission) {
+  if (permission !== 'granted') return;
 
   const now = new Date();
   const currentHour = now.getHours().toString().padStart(2, '0');
@@ -54,7 +57,6 @@ export async function checkAndFireNotifications(meds: MedicationData[]) {
   const dateStr = now.toDateString();
 
   meds.forEach(med => {
-    // Logica di filtraggio per frequenza (Eutirox logic)
     let shouldNotify = false;
     const frequency = (med.frequenza || 'DAILY').toUpperCase().trim();
 
@@ -64,7 +66,6 @@ export async function checkAndFireNotifications(meds: MedicationData[]) {
       if (med.parsed_giorni_settimana && Array.isArray(med.parsed_giorni_settimana)) {
         shouldNotify = med.parsed_giorni_settimana.includes(adjustedDayOfWeek);
       } else if (med.giorni_settimana !== undefined && med.giorni_settimana !== '') {
-        // Fallback per robustezza: Converti 6.7 in 6,7
         const daysStr = String(med.giorni_settimana).replace(/\./g, ',').replace(/[^\d,]/g, '');
         const allowedDays = daysStr.split(',').map(d => parseInt(d.trim(), 10)).filter(n => !isNaN(n));
         shouldNotify = allowedDays.includes(adjustedDayOfWeek);
@@ -77,41 +78,71 @@ export async function checkAndFireNotifications(meds: MedicationData[]) {
 
     if (!shouldNotify) return;
 
-    // Controlla orario_1
     if (med.orario_1 && med.orario_1 === currentTimeStr) {
       const notificationId = `${med.id}-orario1-${dateStr}`;
       if (!sentNotifications.has(notificationId)) {
-        fireNotification(registration, med);
+        fireNotification(med);
         sentNotifications.add(notificationId);
       }
     }
 
-    // Controlla orario_2
     if (med.orario_2 && med.orario_2 === currentTimeStr) {
       const notificationId = `${med.id}-orario2-${dateStr}`;
       if (!sentNotifications.has(notificationId)) {
-        fireNotification(registration, med);
+        fireNotification(med);
         sentNotifications.add(notificationId);
       }
     }
   });
 }
 
-function fireNotification(registration: ServiceWorkerRegistration, med: MedicationData) {
+async function fireNotification(med: MedicationData) {
   const title = `Promemoria Medicinale: ${med.nome}`;
-  const options = {
-    body: `È ora di prendere ${med.nome} (${med.dosaggio}).`,
-    icon: '/vite.svg', 
-    badge: '/vite.svg',
-    data: { url: window.location.origin },
-    requireInteraction: true,
-    tag: `med-${med.id}` // Sostituisce eventuali notifiche precedenti dello stesso farmaco
-  };
+  const body = `È ora di prendere ${med.nome} (${med.dosaggio}).`;
 
-  registration.showNotification(title, options);
+  if (Capacitor.isNativePlatform()) {
+    await LocalNotifications.schedule({
+      notifications: [
+        {
+          title,
+          body,
+          id: Math.floor(Math.random() * 100000),
+          schedule: { at: new Date(Date.now() + 1000) }, // Fire almost immediately
+        }
+      ]
+    });
+    return;
+  }
+
+  const registration = await navigator.serviceWorker.ready;
+  if (registration) {
+    const options = {
+      body,
+      icon: '/vite.svg', 
+      badge: '/vite.svg',
+      data: { url: window.location.origin },
+      requireInteraction: true,
+      tag: `med-${med.id}`
+    };
+    registration.showNotification(title, options);
+  }
 }
 
 export async function sendTestNotification() {
+    if (Capacitor.isNativePlatform()) {
+      await LocalNotifications.schedule({
+        notifications: [
+          {
+            title: 'Test Notifica',
+            body: 'Le notifiche funzionano su Android!',
+            id: 999999,
+            schedule: { at: new Date(Date.now() + 1000) },
+          }
+        ]
+      });
+      return;
+    }
+
     if (Notification.permission === 'granted') {
         const registration = await navigator.serviceWorker.ready;
         registration.showNotification('Test Notifica', {

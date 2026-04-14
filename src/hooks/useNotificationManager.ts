@@ -55,11 +55,11 @@ export function useNotificationManager() {
     if (permission !== 'granted' || meds.length === 0) return;
 
     // Run once immediately
-    checkAndFireNotifications(meds);
+    checkAndFireNotifications(meds, permission);
 
     // Then check every minute (60s)
     intervalRef.current = setInterval(() => {
-      checkAndFireNotifications(meds);
+      checkAndFireNotifications(meds, permission);
     }, 60 * 1000);
 
     return () => {
