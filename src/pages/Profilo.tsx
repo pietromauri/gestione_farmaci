@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/select';
 import { mockMedications } from '@/lib/mockData';
 import { GoogleLogin } from '@/components/GoogleLogin';
-import { fetchDatabase, MedicationData, updateMedication } from '@/lib/googleSheets';
+import { fetchDatabase, getCachedDatabase, MedicationData, updateMedication } from '@/lib/googleSheets';
 import { useNotificationManager } from '@/hooks/useNotificationManager';
 import { sendTestNotification } from '@/lib/notifications';
 
@@ -32,21 +32,34 @@ export default function Profilo() {
   const [isSaving, setIsSaving] = React.useState(false);
 
   const loadData = async () => {
-    setLoading(true);
-    const db = await fetchDatabase();
-    if (db && db.medicinals && db.medicinals.length > 0) {
-      setMeds(db.medicinals);
-    } else {
-      setMeds(mockMedications.map(m => ({
-        id: m.id,
-        nome: m.name,
-        dosaggio: m.dosage,
-        forma: m.form,
-        stock_attuale: m.currentStock || 0,
-        soglia: m.refillThreshold || 0
-      })));
+    const processMeds = (db: any) => {
+      if (db && db.medicinals && db.medicinals.length > 0) {
+        setMeds(db.medicinals);
+      } else {
+        setMeds(mockMedications.map(m => ({
+          id: m.id,
+          nome: m.name,
+          dosaggio: m.dosage,
+          forma: m.form,
+          stock_attuale: m.currentStock || 0,
+          soglia: m.refillThreshold || 0
+        })));
+      }
+    };
+
+    const cachedDb = getCachedDatabase();
+    if (cachedDb) {
+      processMeds(cachedDb);
+      setLoading(false);
     }
-    setLoading(false);
+
+    const freshDb = await fetchDatabase();
+    if (freshDb) {
+      processMeds(freshDb);
+      setLoading(false);
+    } else if (!cachedDb) {
+      setLoading(false);
+    }
   };
 
   React.useEffect(() => {

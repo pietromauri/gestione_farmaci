@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { format, parseISO, subDays, isSameDay } from 'date-fns';
 import { it } from 'date-fns/locale';
-import { fetchDatabase, DatabaseLog } from '@/lib/googleSheets';
+import { fetchDatabase, getCachedDatabase, DatabaseLog } from '@/lib/googleSheets';
 
 export default function Diario() {
   const [logs, setLogs] = useState<DatabaseLog[]>([]);
@@ -12,14 +12,28 @@ export default function Diario() {
   const days = Array.from({ length: 6 }).map((_, i) => subDays(new Date(), 5 - i));
 
   useEffect(() => {
-    const loadLogs = async () => {
-      const db = await fetchDatabase();
+    const processLogs = (db: any) => {
       if (db && db.logs) {
         setLogs(db.logs);
       }
-      setLoading(false);
     };
-    loadLogs();
+
+    const init = async () => {
+      const cachedDb = getCachedDatabase();
+      if (cachedDb) {
+        processLogs(cachedDb);
+        setLoading(false);
+      }
+
+      const freshDb = await fetchDatabase();
+      if (freshDb) {
+        processLogs(freshDb);
+        setLoading(false);
+      } else if (!cachedDb) {
+        setLoading(false);
+      }
+    };
+    init();
   }, []);
 
   const getDayLogs = (day: Date) => {

@@ -9,7 +9,7 @@ import {
 import { FileText, Download, TrendingUp, Award, Activity } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { fetchDatabase, DatabaseLog } from '@/lib/googleSheets';
+import { fetchDatabase, getCachedDatabase, DatabaseLog } from '@/lib/googleSheets';
 
 export default function Progressi() {
   const [stats, setStats] = useState({
@@ -22,20 +22,34 @@ export default function Progressi() {
 
   useEffect(() => {
     const loadStats = async () => {
-      const db = await fetchDatabase();
-      if (db && db.logs && db.logs.length > 0) {
-        const total = db.logs.length;
-        const taken = db.logs.filter((l: DatabaseLog) => (l.status || l.stato) === 'taken').length;
-        const adherence = Math.round((taken / total) * 100);
-        
-        setStats({
-          adherence,
-          totalLogs: total,
-          takenLogs: taken,
-          streak: taken > 0 ? taken : 0 // Semplificato per ora
-        });
+      const processStats = (db: any) => {
+        if (db && db.logs && db.logs.length > 0) {
+          const total = db.logs.length;
+          const taken = db.logs.filter((l: DatabaseLog) => (l.status || l.stato) === 'taken' || (l.status || l.stato) === 'TAKEN').length;
+          const adherence = total > 0 ? Math.round((taken / total) * 100) : 0;
+          
+          setStats({
+            adherence,
+            totalLogs: total,
+            takenLogs: taken,
+            streak: taken > 0 ? taken : 0 // Semplificato per ora
+          });
+        }
+      };
+
+      const cachedDb = getCachedDatabase();
+      if (cachedDb) {
+        processStats(cachedDb);
+        setLoading(false);
       }
-      setLoading(false);
+
+      const freshDb = await fetchDatabase();
+      if (freshDb) {
+        processStats(freshDb);
+        setLoading(false);
+      } else if (!cachedDb) {
+        setLoading(false);
+      }
     };
     loadStats();
   }, []);
