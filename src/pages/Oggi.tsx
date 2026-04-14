@@ -16,7 +16,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { mockMedications, mockSchedules, mockAppointments } from '@/lib/mockData';
 import { Medication, Schedule, Appointment } from '@/types';
-import { logMedication, fetchDatabase } from '@/lib/googleSheets';
+import { logMedication, fetchDatabase, getCachedDatabase } from '@/lib/googleSheets';
 import { useNotificationManager } from '@/hooks/useNotificationManager';
 
 type TaskType = 'MEDICATION' | 'APPOINTMENT' | 'MEASUREMENT';
@@ -38,8 +38,7 @@ export default function Oggi() {
   const [loading, setLoading] = useState(true);
 
   React.useEffect(() => {
-    const loadData = async () => {
-      const db = await fetchDatabase();
+    const processData = (db: any) => {
       const today = new Date();
       const dayTasks: Task[] = [];
 
@@ -55,7 +54,7 @@ export default function Oggi() {
           }
         }
 
-        db.medicinals.forEach(med => {
+        db.medicinals.forEach((med: any) => {
           // Filtra per frequenza
           const dayOfMonth = today.getDate();
           const dayOfWeek = today.getDay(); // 0=Sun, 1=Mon...
@@ -77,7 +76,7 @@ export default function Oggi() {
             } else if (med.giorni_settimana !== undefined && med.giorni_settimana !== '') {
               // Robust parsing: convert 6.7 to 6,7 then remove non-digits/commas
               const daysStr = String(med.giorni_settimana).replace(/\./g, ',').replace(/[^\d,]/g, '');
-              const allowedDays = daysStr.split(',').map(d => parseInt(d, 10)).filter(d => !isNaN(d));
+              const allowedDays = daysStr.split(',').map((d: string) => parseInt(d, 10)).filter((d: number) => !isNaN(d));
               shouldShow = allowedDays.includes(adjustedDayOfWeek);
             }
           }
@@ -216,9 +215,27 @@ export default function Oggi() {
       });
 
       setTasks(dayTasks.sort((a, b) => a.time.localeCompare(b.time)));
-      setLoading(false);
     };
-    loadData();
+
+    const init = async () => {
+      // 1. Lettura immediata da Cache Locale per evitare schermate bianche
+      const cachedDb = getCachedDatabase();
+      if (cachedDb) {
+        processData(cachedDb);
+        setLoading(false); // Nascondi caricamento all'istante
+      }
+
+      // 2. Fetch da Google Sheets in background
+      const freshDb = await fetchDatabase();
+      if (freshDb) {
+        processData(freshDb);
+        setLoading(false);
+      } else if (!cachedDb) {
+        setLoading(false);
+      }
+    };
+    
+    init();
   }, []);
 
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);

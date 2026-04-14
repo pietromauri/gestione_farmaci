@@ -46,6 +46,16 @@ export interface DatabaseLog {
   email?: string;
 }
 
+export const getCachedDatabase = () => {
+  try {
+    const cached = localStorage.getItem('healtrack_db_cache');
+    if (cached) return JSON.parse(cached);
+  } catch (e) {
+    console.warn("Errore lettura cache:", e);
+  }
+  return null;
+};
+
 export const fetchDatabase = async () => {
   if (!SCRIPT_URL || SCRIPT_URL.includes('XXXXXXXXX')) return null;
   try {
@@ -110,6 +120,11 @@ export const fetchDatabase = async () => {
         return med;
       });
     }
+
+    // Salviamo in cache per caricamenti immediati offline-first
+    try {
+      localStorage.setItem('healtrack_db_cache', JSON.stringify(data));
+    } catch (e) {}
 
     return data;
   } catch (error) {
