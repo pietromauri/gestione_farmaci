@@ -65,10 +65,6 @@ export async function checkAndFireNotifications(meds: MedicationData[], permissi
     } else if (frequency === 'WEEKLY') {
       if (med.parsed_giorni_settimana && Array.isArray(med.parsed_giorni_settimana)) {
         shouldNotify = med.parsed_giorni_settimana.includes(adjustedDayOfWeek);
-      } else if (med.giorni_settimana !== undefined && med.giorni_settimana !== '') {
-        const daysStr = String(med.giorni_settimana).replace(/\./g, ',').replace(/[^\d,]/g, '');
-        const allowedDays = daysStr.split(',').map(d => parseInt(d.trim(), 10)).filter(n => !isNaN(n));
-        shouldNotify = allowedDays.includes(adjustedDayOfWeek);
       }
     } else if (frequency === 'ALTERNATE') {
       shouldNotify = now.getDate() % 2 === 0;
