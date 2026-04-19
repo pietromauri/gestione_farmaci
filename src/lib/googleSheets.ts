@@ -97,11 +97,18 @@ export const fetchDatabase = async () => {
     let data = { medicinals, logs };
 
     // Fix shifted columns: if 'giorni_settimana' is empty but 'ultima_assunzione' contains a comma-separated list of numbers
+    // Note: Google Sheets in Italian locale might turn "6,7" into 6.7 or "6.7", and sometimes there are spaces.
     if (data.medicinals) {
       data.medicinals = data.medicinals.map((med) => {
-        if (!med.giorni_settimana && med.ultima_assunzione && /^(\d+,)*\d+$/.test(med.ultima_assunzione)) {
-          med.giorni_settimana = med.ultima_assunzione;
-          med.ultima_assunzione = '';
+        const val = String(med.ultima_assunzione || '').trim();
+        if (!med.giorni_settimana && val) {
+          // Normalize: dots to commas, remove all spaces
+          const normalizedVal = val.replace(/\./g, ',').replace(/\s+/g, '');
+          // Check if it matches a list of days (1-7)
+          if (/^([1-7],)*[1-7]$/.test(normalizedVal)) {
+            med.giorni_settimana = normalizedVal;
+            med.ultima_assunzione = '';
+          }
         }
         return med;
       });
