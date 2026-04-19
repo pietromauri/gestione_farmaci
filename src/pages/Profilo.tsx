@@ -89,11 +89,15 @@ export default function Profilo() {
 
   const toggleDay = (day: number) => {
     if (!editingMed) return;
-    const currentDays = editingMed.giorni_settimana ? String(editingMed.giorni_settimana).replace(/\./g, ',').split(',').map(Number).filter(Boolean) : [];
+    const currentDays = editingMed.parsed_giorni_settimana || [];
     const newDays = currentDays.includes(day)
       ? currentDays.filter(d => d !== day)
       : [...currentDays, day].sort();
-    setEditingMed({ ...editingMed, giorni_settimana: newDays.join(',') });
+    setEditingMed({
+      ...editingMed,
+      giorni_settimana: newDays.join(','),
+      parsed_giorni_settimana: newDays
+    });
   };
 
   return (
@@ -227,7 +231,7 @@ export default function Profilo() {
                           { id: 1, label: 'L' }, { id: 2, label: 'M' }, { id: 3, label: 'M' },
                           { id: 4, label: 'G' }, { id: 5, label: 'V' }, { id: 6, label: 'S' }, { id: 7, label: 'D' },
                         ].map((day) => {
-                          const isSelected = editingMed.giorni_settimana ? String(editingMed.giorni_settimana).replace(/\./g, ',').split(',').map(Number).includes(day.id) : false;
+                          const isSelected = editingMed.parsed_giorni_settimana?.includes(day.id) || false;
                           return (
                             <button
                               key={day.id}
